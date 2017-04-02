@@ -42,6 +42,14 @@ class Client
         return $mapResponse ? $body['result'] : $body;
     }
 
+    public function getDocument($id)
+    {
+        $body = $this->request([
+            'url' => '/data/doc/' . $this->clientConfig['dataset'] . '/' . $id
+        ]);
+        return $body['documents'][0];
+    }
+
     /**
      * Client configuration and helper methods
      */
