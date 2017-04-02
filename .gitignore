@@ -1,0 +1,7 @@
+build
+tests/phpunit.xml
+composer.phar
+vendor
+test.php
+.lintcache
+docs/_build
