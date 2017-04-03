@@ -19,13 +19,27 @@ class Client
     private $clientConfig = [];
     private $httpClient;
 
+    /**
+     * Creates a new instance of the Sanity client
+     *
+     * @param array $config Array of configuration options
+     * @return Client
+     */
     public function __construct($config = [])
     {
         $this->config($config);
     }
 
     /**
-     * Data methods
+     * Query for documents
+     *
+     * Given a GROQ-query and an optional set of parameters, run a query against the API
+     * and return the decoded result.
+     *
+     * @param string $query GROQ-query to send to the API
+     * @param array $params Associative array of parameters to use for the query
+     * @param array $options Optional array of options for the query operation
+     * @return mixed Returns the result - data type depends on the query
      */
     public function fetch($query, $params = null, $options = [])
     {
@@ -42,6 +56,12 @@ class Client
         return $mapResponse ? $body['result'] : $body;
     }
 
+    /**
+     * Fetch a single document by ID
+     *
+     * @param string $id ID of the document to retrieve
+     * @return array Returns an associative array
+     */
     public function getDocument($id)
     {
         $body = $this->request([
@@ -51,7 +71,14 @@ class Client
     }
 
     /**
-     * Client configuration and helper methods
+     * Sets or gets the client configuration.
+     *
+     * If a new configuration is passed as the first argument, it will be merged
+     * with the existing configuration. If no new configuration is given, the old
+     * configuration is returned.
+     *
+     * @param array|null $newConfig New configuration to use.
+     * @return array|Client Returns the client instance if a new configuration is passed
      */
     public function config($newConfig = null)
     {
@@ -69,6 +96,12 @@ class Client
         return $this;
     }
 
+    /**
+     * Performs a request against the Sanity API based on the passed options.
+     *
+     * @param array Array of options for this request.
+     * @return mixed Returns a decoded response, type varies with endpoint.
+     */
     public function request($options)
     {
         $request = $this->getRequest($options);
@@ -90,6 +123,12 @@ class Client
         return $body;
     }
 
+    /**
+     * Returns an instance of Request based on the given options and client configuration.
+     *
+     * @param array Array of options for this request.
+     * @return GuzzleHttp\Psr7\Request Returns an initialized request.
+     */
     private function getRequest($options)
     {
         $headers = isset($options['headers']) ? $options['headers'] : [];
@@ -104,6 +143,15 @@ class Client
         return new Request($method, $url, $headers, $body);
     }
 
+    /**
+     * Initialize a new client configuration
+     *
+     * Validate a configuration, merging default values and assigning the
+     * correct hostname based on project ID.
+     *
+     * @param array $config New configuration parameters to use.
+     * @return array Returns the new configuration.
+     */
     private function initConfig($config)
     {
         $newConfig = array_replace_recursive($this->defaultConfig, $this->clientConfig, $config);
