@@ -41,6 +41,10 @@ foreach ($product in $results) {
 }
 ```
 
+## Contributing
+
+`sanity-php` follows the [PSR-2 Coding Style Guide](http://www.php-fig.org/psr/psr-2/). Contributions are welcome, but must conform to this standard.
+
 ## License
 
 MIT-licensed. See LICENSE
