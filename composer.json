@@ -10,7 +10,10 @@
         "squizlabs/php_codesniffer": "^2.8"
     },
     "autoload": {
-        "psr-4": { "Sanity\\" : "lib/" }
+        "psr-4": {
+            "Sanity\\" : "lib/",
+            "SanityTest\\": "test/"
+        }
     },
     "license": "MIT",
     "authors": [

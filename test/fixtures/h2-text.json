@@ -1,0 +1,11 @@
+{
+  "_type": "block",
+  "style": "h2",
+  "spans": [
+    {
+      "_type": "span",
+      "text": "Such h2 header, much amaze",
+      "marks": []
+    }
+  ]
+}

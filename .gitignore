@@ -7,3 +7,5 @@ test.php
 docs/_build
 package.json
 *.sublime-workspace
+clover.xml
+
