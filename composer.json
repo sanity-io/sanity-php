@@ -3,7 +3,7 @@
     "description": "PHP library for the Sanity API",
     "type": "library",
     "scripts": {
-        "test": "./vendor/bin/phpunit"
+        "test": "./vendor/bin/phpunit && ./vendor/bin/phpcs lib"
     },
     "require": {
         "guzzlehttp/guzzle": "^6.2"

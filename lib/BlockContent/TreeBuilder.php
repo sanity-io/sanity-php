@@ -124,8 +124,8 @@ class TreeBuilder
 
     public function isList($item)
     {
-      $type = isset($item['_type']) ? $item['_type'] : null;
-      $listItem = isset($item['listItem']);
-      return $type === 'block' && (bool) $listItem;
+        $type = isset($item['_type']) ? $item['_type'] : null;
+        $listItem = isset($item['listItem']);
+        return $type === 'block' && (bool) $listItem;
     }
 }

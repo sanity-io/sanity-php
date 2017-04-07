@@ -7,7 +7,8 @@ class Node
     public $mark;
     public $content = [];
 
-    public function __construct($node = null) {
+    public function __construct($node = null)
+    {
         if (!$node) {
             return;
         }
@@ -17,12 +18,14 @@ class Node
         $this->content = $node['content'];
     }
 
-    public function addContent($node) {
+    public function addContent($node)
+    {
         $this->content[] = $node;
         return $this;
     }
 
-    public function serialize() {
+    public function serialize()
+    {
         $node = [];
 
         if ($this->type) {
@@ -34,7 +37,7 @@ class Node
         }
 
         if (!empty($this->content)) {
-            $node['content'] = array_map(function($child) {
+            $node['content'] = array_map(function ($child) {
                 return $child instanceof Node ? $child->serialize() : $child;
             }, $this->content);
         }

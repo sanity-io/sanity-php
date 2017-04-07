@@ -3,7 +3,8 @@ namespace Sanity\BlockContent\TypeHandlers;
 
 class ListHandler
 {
-    public function __invoke($blocks, $treeBuilder) {
+    public function __invoke($blocks, $treeBuilder)
+    {
         $mapItems = function ($item) use ($treeBuilder) {
             return $treeBuilder->typeHandlers['block']($item, $treeBuilder);
         };
