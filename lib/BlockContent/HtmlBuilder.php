@@ -28,7 +28,7 @@ class HtmlBuilder
             $content = [];
             if (isset($node['content'])) {
                 $content = $node['content'];
-            } else if (isset($node['items'])) {
+            } elseif (isset($node['items'])) {
                 $content = $this->wrapInListItems($node['items']);
             }
 
