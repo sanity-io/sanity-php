@@ -196,12 +196,14 @@ class BlockContentHtmlTest extends TestCase
         $this->assertEquals($expected, $this->customHtmlBuilder->build($input));
     }
 
+    /**
+     * @expectedException Sanity\Exception\ConfigException
+     * @expectedExceptionMessage No serializer registered for node type "author"
+     */
     public function testThrowsErrorOnCustomBlockTypeWithoutRegisteredHandler()
     {
         $input = BlockContent::toTree($this->loadFixture('custom-block.json'));
-        /*t.throws(() => {
-            $this->htmlBuilder->build($input);
-        }, {message: "Don't know how to handle type 'author'"}, {})*/
+        $this->htmlBuilder->build($input);
     }
 
     public function testHandlesCustomBlockTypeWithCustomRegisteredHandler()
