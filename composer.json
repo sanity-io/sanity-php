@@ -2,6 +2,9 @@
     "name": "sanity/sanity-php",
     "description": "PHP library for the Sanity API",
     "type": "library",
+    "scripts": {
+        "test": "./vendor/bin/phpunit"
+    },
     "require": {
         "guzzlehttp/guzzle": "^6.2"
     },
