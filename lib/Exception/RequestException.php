@@ -3,6 +3,10 @@ namespace Sanity\Exception;
 
 class RequestException extends BaseException
 {
+    protected $response;
+    protected $statusCode;
+    protected $responseBody;
+
     public function __construct($response)
     {
         $code = $response->getStatusCode();
@@ -29,6 +33,21 @@ class RequestException extends BaseException
         }
 
         parent::__construct($this->message, $code);
+    }
+
+    public function getResponse()
+    {
+        return $this->response;
+    }
+
+    public function getResponseBody()
+    {
+        return $this->responseBody;
+    }
+
+    public function getStatusCode()
+    {
+        return $this->statusCode;
     }
 
     private function resolveErrorMessage($body)
