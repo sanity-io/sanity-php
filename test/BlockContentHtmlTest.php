@@ -252,4 +252,12 @@ class BlockContentHtmlTest extends TestCase
         $tree = BlockContent::toTree($this->loadFixture('messy-text.json'));
         $this->assertEquals($expected, BlockContent::toHtml($tree));
     }
+
+    public function testCanBeCalledAsFunction()
+    {
+        $input = BlockContent::toTree($this->loadFixture('link-simple-text.json'));
+        $expected = '<p>String before link <a href="http://icanhas.cheezburger.com/">actual link text</a> the rest</p>';
+        $htmlBuilder = $this->htmlBuilder;
+        $this->assertEquals($expected, $htmlBuilder($input));
+    }
 }
