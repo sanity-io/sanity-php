@@ -222,6 +222,14 @@ class BlockContentHtmlTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
+    public function testEscapesCharactersInNonUnicodeCharsets()
+    {
+        $input = BlockContent::toTree($this->loadFixture('dangerous-text.json'));
+        $expected = '<p>I am 1337 &lt;script&gt;alert(&#039;//haxxor&#039;);&lt;/script&gt;</p>';
+        $actual = BlockContent::toHtml($input, ['charset' => 'iso-8859-1']);
+        $this->assertEquals($expected, $actual);
+    }
+
     public function testCanBeCalledStaticallyWithArray()
     {
         $expected = '<p>Hacking <code>teh codez</code> is <strong>all <span style="text-decoration: underline;">fun</span>'
