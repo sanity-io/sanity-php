@@ -17,6 +17,7 @@ class Client
         'apiVersion' => 'v1',
         'useProjectHostname' => true,
         'timeout' => 30,
+        'handler' => null,
     ];
 
     private $clientConfig = [];
@@ -223,6 +224,7 @@ class Client
         $this->httpClient = new HttpClient([
             'base_uri' => $this->clientConfig['url'],
             'timeout' => $this->clientConfig['timeout'],
+            'handler' => $this->clientConfig['handler'],
         ]);
 
         return $this;
