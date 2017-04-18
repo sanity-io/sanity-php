@@ -47,17 +47,17 @@ class Client
      */
     public function fetch($query, $params = null, $options = [])
     {
-        $mapResponse = !isset($options['filterResponse']) || $options['filterResponse'] !== false;
+        $unfilteredResponse = isset($options['filterResponse']) && $options['filterResponse'] === false;
 
         $serializedParams = $params ? ParameterSerializer::serialize($params) : [];
-        $queryParams = array_merge(['query' => $query], $serializedParams, $options);
+        $queryParams = array_merge(['query' => $query], $serializedParams);
 
         $body = $this->request([
             'url' => '/data/query/' . $this->clientConfig['dataset'],
             'query' => $queryParams,
         ]);
 
-        return $mapResponse ? $body['result'] : $body;
+        return $unfilteredResponse ? $body :  $body['result'];
     }
 
     /**
@@ -147,7 +147,7 @@ class Client
     {
         $sel = $selection instanceof Selection ? $selection : new Selection($selection);
         $opts = array_replace(['returnDocuments' =>  false], $options ?: []);
-        return $this->mutate(['delete' => $selection->serialize()], $opts);
+        return $this->mutate(['delete' => $sel->serialize()], $opts);
     }
 
     /**
@@ -182,8 +182,8 @@ class Client
         $returnFirst = $returnDocuments && isset($options['returnFirst']) && $options['returnFirst'];
         $results = isset($body['results']) ? $body['results'] : [];
 
-        if ($returnFirst) {
-            return isset($results[0]) ? $results[0] : null;
+        if ($returnDocuments && $returnFirst) {
+            return isset($results[0]) ? $results[0]['document'] : null;
         } elseif ($returnDocuments) {
             return array_column($results, 'document', 'id');
         }

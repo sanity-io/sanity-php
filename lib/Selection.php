@@ -45,7 +45,7 @@ class Selection implements JsonSerializable
      */
     public function matchesMultiple()
     {
-        return isset($this->selection['id']) && is_string($this->selection['id']);
+        return !isset($this->selection['id']) || is_array($this->selection['id']);
     }
 
     /**
