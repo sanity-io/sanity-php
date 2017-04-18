@@ -8,4 +8,4 @@ docs/_build
 package.json
 *.sublime-workspace
 clover.xml
-
+/coverage
