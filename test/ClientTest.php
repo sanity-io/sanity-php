@@ -47,6 +47,26 @@ class ClientTest extends TestCase
         $this->assertEquals('staging', $this->client->config()['dataset']);
     }
 
+    public function testCanCreateProjectlessClient()
+    {
+        $mockBody = ['some' => 'response'];
+
+        $this->history = [];
+        $historyMiddleware = Middleware::history($this->history);
+
+        $stack = HandlerStack::create(new MockHandler([$this->mockJsonResponseBody($mockBody)]));
+        $stack->push($historyMiddleware);
+
+        $this->client = new Client([
+            'useProjectHostname' => false,
+            'handler' => $stack,
+            'token' => 'mytoken',
+        ]);
+
+        $response = $this->client->request(['url' => '/projects']);
+        $this->assertEquals($mockBody, $response);
+    }
+
     public function testCanGetDocument()
     {
         $expected = ['_id' => 'someDocId', '_type' => 'bike', 'name' => 'Tandem Extraordinaire'];

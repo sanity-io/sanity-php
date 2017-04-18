@@ -325,7 +325,7 @@ class Client
             throw new ConfigException('Configuration must contain `projectId`');
         }
 
-        if (!$dataset) {
+        if ($projectBased && !$dataset) {
             throw new ConfigException('Configuration must contain `dataset`');
         }
 
