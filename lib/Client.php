@@ -6,6 +6,7 @@ use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
 use Sanity\Exception\ClientException;
+use Sanity\Exception\ConfigException;
 use Sanity\Exception\ServerException;
 use Sanity\Exception\InvalidArgumentException;
 
@@ -316,9 +317,14 @@ class Client
         $apiVersion = $newConfig['apiVersion'];
         $projectBased = $newConfig['useProjectHostname'];
         $projectId = isset($newConfig['projectId']) ? $newConfig['projectId'] : null;
+        $dataset = isset($newConfig['dataset']) ? $newConfig['dataset'] : null;
 
         if ($projectBased && !$projectId) {
             throw new ConfigException('Configuration must contain `projectId`');
+        }
+
+        if (!$dataset) {
+            throw new ConfigException('Configuration must contain `dataset`');
         }
 
         $hostParts = explode('://', $newConfig['apiHost']);
