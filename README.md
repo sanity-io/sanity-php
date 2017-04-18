@@ -22,7 +22,7 @@ To use the library, use Composer's [autoload](https://getcomposer.org/doc/00-int
 require_once 'vendor/autoload.php';
 ```
 
-## API
+## Usage
 
 ### Instantiating a new client
 
@@ -189,6 +189,39 @@ $client->config(['dataset' => 'newDataset']);
 ```
 
 The new configuration will be merged with the existing, so you only need to pass the options you want to modify.
+
+### Rendering block content
+
+When you use the block editor in Sanity, it produces a structured array structure that you can use to render the content on any platform you might want. In PHP, a common output format is HTML. To make the transformation from the array structure to HTML simpler, we include a helper class for this within the library.
+
+If your content only contains the basic, built-in block types, you can get rendered HTML like this:
+
+```php
+use Sanity\BlockContent;
+
+$document = $client->getDocument('some-doc');
+$article = $document['article']; // The field that contains your block content
+
+$html = BlockContent::toHtml($article);
+```
+
+If you have some custom types, or would like to customize the rendering, you may pass an associative array of serializers:
+
+```php
+$html = BlockContent::toHtml($article, [
+  'serializers' => [
+    'listItem' => function ($item, $parent, $htmlBuilder) {
+      return '<li class="my-list-item">' . implode('\n', $item['children']) . '</li>';
+    },
+    'geopoint' => function ($item) {
+      $attrs = $author['attributes']
+      $url = 'https://www.google.com/maps/embed/v1/place?key=someApiKey&center='
+      $url .= $attrs['lat'] . ',' . $attrs['lng'];
+      return '<iframe class="geomap" src="' . $url . '" allowfullscreen></iframe>'
+    }
+  ]
+]);
+```
 
 ## Contributing
 
