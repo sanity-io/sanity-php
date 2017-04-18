@@ -182,7 +182,7 @@ class Client
 
         if ($returnFirst) {
             return isset($results[0]) ? $results[0] : null;
-        } else if ($returnDocuments) {
+        } elseif ($returnDocuments) {
             return array_column($results, 'document', 'id');
         }
 

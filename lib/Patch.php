@@ -44,7 +44,9 @@ class Patch implements JsonSerializable
     public function unset($attrs)
     {
         if (!is_array($attrs)) {
-            throw new Exception\InvalidArgumentException('unset(attrs) takes an array of attributes to unset, non-array given');
+            throw new Exception\InvalidArgumentException(
+                'unset(attrs) takes an array of attributes to unset, non-array given'
+            );
         }
 
         $previous = isset($this->operations['unset']) ? $this->operations['unset'] : [];

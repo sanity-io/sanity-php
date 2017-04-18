@@ -28,7 +28,8 @@ class Transaction implements JsonSerializable
     {
         if (!$this->client) {
             throw new Exception\ConfigException(
-                'No "client" passed to transaction, either provide one or pass the transaction to a clients mutate() method'
+                'No "client" passed to transaction, either provide one or '
+                . 'pass the transaction to a clients mutate() method'
             );
         }
 
