@@ -39,6 +39,14 @@ class ClientTest extends TestCase
         $this->client = new Client(['projectId' => 'abc']);
     }
 
+    public function testCanSetAndGetConfig()
+    {
+        $this->client = new Client(['projectId' => 'abc', 'dataset' => 'production']);
+        $this->assertEquals('production', $this->client->config()['dataset']);
+        $this->assertEquals($this->client, $this->client->config(['dataset' => 'staging']));
+        $this->assertEquals('staging', $this->client->config()['dataset']);
+    }
+
     public function testCanGetDocument()
     {
         $expected = ['_id' => 'someDocId', '_type' => 'bike', 'name' => 'Tandem Extraordinaire'];
@@ -120,6 +128,21 @@ class ClientTest extends TestCase
     {
         $this->mockResponses([]);
         $this->client->create(['foo' => 'bar']);
+    }
+
+    public function testCanCreateDocumentWithVisibilityOption()
+    {
+        $document = ['_type' => 'bike', 'seats' => 12, 'name' => 'Dusinsykkel'];
+        $result = ['_id' => 'someNewDocId'] + $document;
+        $mockBody = ['results' => [['id' => 'someNewDocId', 'document' => $result]]];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+
+        $this->assertEquals($result, $this->client->create($document, ['visibility' => 'async']));
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true&visibility=async',
+            'headers' => ['Sanity-Token' => 'muchsecure'],
+            'requestBody' => json_encode(['mutations' => [['create' => $document]]])
+        ]);
     }
 
     public function testCanCreateDocumentIfNotExists()
