@@ -41,7 +41,7 @@ class Patch implements JsonSerializable
         return $this->assign('diffMatchPatch', $props);
     }
 
-    public function unset($attrs)
+    public function unsetButWeCantNameItThatSoDontUseItUntilWeDecideOnAlternativeName($attrs)
     {
         if (!is_array($attrs)) {
             throw new Exception\InvalidArgumentException(
