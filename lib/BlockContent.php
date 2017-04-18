@@ -2,6 +2,7 @@
 namespace Sanity;
 
 use Sanity\BlockContent\TreeBuilder;
+use Sanity\BlockContent\HtmlBuilder;
 
 class BlockContent
 {
@@ -11,9 +12,11 @@ class BlockContent
         return $treeBuilder->build($content);
     }
 
-    public static function toHtml($content)
+    public static function toHtml($content, $options = [])
     {
-        $tree = $this->isTree($content) ? $content : static::toTree($content);
+        $htmlBuilder = new HtmlBuilder($options);
+        $tree = static::isTree($content) ? $content : static::toTree($content);
+        return $htmlBuilder->build($tree);
     }
 
     public static function isTree($tree)

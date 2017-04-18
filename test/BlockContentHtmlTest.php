@@ -221,4 +221,19 @@ class BlockContentHtmlTest extends TestCase
         $actual = $this->htmlBuilder->build($input);
         $this->assertEquals($expected, $actual);
     }
+
+    public function testCanBeCalledStaticallyWithArray()
+    {
+        $expected = '<p>Hacking <code>teh codez</code> is <strong>all <span style="text-decoration: underline;">fun</span>'
+            . ' and <em>games</em> until</strong> someone gets p0wn3d.</p>';
+        $this->assertEquals($expected, BlockContent::toHtml($this->loadFixture('messy-text.json')));
+    }
+
+    public function testCanBeCalledStaticallyWithTree()
+    {
+        $expected = '<p>Hacking <code>teh codez</code> is <strong>all <span style="text-decoration: underline;">fun</span>'
+            . ' and <em>games</em> until</strong> someone gets p0wn3d.</p>';
+        $tree = BlockContent::toTree($this->loadFixture('messy-text.json'));
+        $this->assertEquals($expected, BlockContent::toHtml($tree));
+    }
 }

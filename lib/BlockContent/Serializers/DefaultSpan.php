@@ -7,7 +7,7 @@ class DefaultSpan
     {
         $head = '';
         $tail = '';
-        $markTag = isset($span['mark']) ? $htmlBuilder->serializeMarkAs($span['mark']) : null;
+        $markTag = isset($span['mark']) ? $htmlBuilder->getMarkSerializer($span['mark']) : null;
         if ($markTag) {
             $head .= is_array($markTag) ? $markTag['head'] : '<' . $markTag . '>';
             $tail .= is_array($markTag) ? $markTag['tail'] : '</' . $markTag . '>';

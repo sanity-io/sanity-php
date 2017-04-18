@@ -62,7 +62,7 @@ class HtmlBuilder
         return $this->build($content);
     }
 
-    public function serializeMarkAs($mark)
+    public function getMarkSerializer($mark)
     {
         return isset($this->serializers['marks'][$mark])
             ? $this->serializers['marks'][$mark]
