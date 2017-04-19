@@ -9,6 +9,7 @@ use GuzzleHttp\Psr7\Response;
 use Sanity\Client;
 use Sanity\Patch;
 use Sanity\Transaction;
+use Sanity\Exception\ServerException;
 
 class ClientTest extends TestCase
 {
@@ -343,6 +344,52 @@ class ClientTest extends TestCase
             'headers' => ['Sanity-Token' => 'muchsecure'],
             'requestBody' => json_encode(['mutations' => [['delete' => ['id' => 'foobar']]]])
         ]);
+    }
+
+    /**
+     * @expectedException Sanity\Exception\ServerException
+     * @expectedExceptionMessage Some error message
+     */
+    public function testResolvesErrorMessageFromNonStandardResponseWithOnlyError()
+    {
+        $mockBody = ['error' => 'Some error message'];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody, 500)]);
+        $this->client->getDocument('someDocId');
+    }
+
+    /**
+     * @expectedException Sanity\Exception\ServerException
+     * @expectedExceptionMessage Some error message
+     */
+    public function testResolvesErrorMessageFromNonStandardResponseWithOnlyMessage()
+    {
+        $mockBody = ['message' => 'Some error message'];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody, 500)]);
+        $this->client->getDocument('someDocId');
+    }
+
+    /**
+     * @expectedException Sanity\Exception\ServerException
+     * @expectedExceptionMessage Unknown error; body: {"some":"thing"}
+     */
+    public function testResolvesErrorMessageFromNonStandardResponse()
+    {
+        $mockBody = ['some' => 'thing'];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody, 500)]);
+        $this->client->getDocument('someDocId');
+    }
+
+    public function testCanGetResponseFromRequestException()
+    {
+        $this->mockResponses([$this->mockJsonResponseBody(['some' => 'thing'], 500)]);
+        try {
+            $this->client->getDocument('someDocId');
+        } catch (ServerException $error) {
+            $body = (string) $error->getResponse()->getBody();
+            $this->assertEquals(json_encode(['some' => 'thing']), $body);
+            $this->assertEquals(json_encode(['some' => 'thing']), $error->getResponseBody());
+            $this->assertEquals(500, $error->getStatusCode());
+        }
     }
 
     /**
