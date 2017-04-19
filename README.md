@@ -2,7 +2,7 @@
 
 PHP library for the [Sanity API](https://sanity.io/)
 
-**Work in progress**. Only the most basic query operations are supported. Mutation support coming soon.
+**Work in progress**. Transactions are currently not supported.
 
 ## Requirements
 
