@@ -1,8 +1,8 @@
 <?php
 namespace Sanity;
 
-use InvalidArgumentException;
 use JsonSerializable;
+use Sanity\Exception\InvalidArgumentException;
 
 class Selection implements JsonSerializable
 {
@@ -60,7 +60,7 @@ class Selection implements JsonSerializable
             return ['query' => $selection['query']];
         }
 
-        if (is_string($selection) || is_array($selection)) {
+        if (is_string($selection) || (is_array($selection) && isset($selection[0]))) {
             return ['id' => $selection];
         }
 
@@ -71,6 +71,6 @@ class Selection implements JsonSerializable
             '* Array containing "query"',
         ]);
 
-        throw new InvalidArgumentException('Unknown selection, must be one of: ' . $selectionOpts);
+        throw new InvalidArgumentException('Invalid selection, must be one of: ' . $selectionOpts);
     }
 }

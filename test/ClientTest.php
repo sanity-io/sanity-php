@@ -9,6 +9,7 @@ use GuzzleHttp\Psr7\Response;
 use Sanity\Client;
 use Sanity\Patch;
 use Sanity\Transaction;
+use Sanity\Selection;
 use Sanity\Exception\ServerException;
 
 class ClientTest extends TestCase
@@ -390,6 +391,39 @@ class ClientTest extends TestCase
             $this->assertEquals(json_encode(['some' => 'thing']), $error->getResponseBody());
             $this->assertEquals(500, $error->getStatusCode());
         }
+    }
+
+    /**
+     * @expectedException Sanity\Exception\InvalidArgumentException
+     * @expectedExceptionMessage Invalid selection
+     */
+    public function testThrowsOnInvalidSelections()
+    {
+        new Selection(['foo' => 'bar']);
+    }
+
+    public function testCanSerializeQuerySelection()
+    {
+        $sel = new Selection(['query' => '*']);
+        $this->assertEquals(['query' => '*'], $sel->serialize());
+    }
+
+    public function testCanSerializeMultiIdSelection()
+    {
+        $sel = new Selection(['abc', '123']);
+        $this->assertEquals(['id' => ['abc', '123']], $sel->serialize());
+    }
+
+    public function testCanSerializeSingleIdSelection()
+    {
+        $sel = new Selection('abc123');
+        $this->assertEquals(['id' => 'abc123'], $sel->serialize());
+    }
+
+    public function testCanJsonEncodeSelection()
+    {
+        $sel = new Selection('abc123');
+        $this->assertEquals(json_encode(['id' => 'abc123']), json_encode($sel));
     }
 
     /**
