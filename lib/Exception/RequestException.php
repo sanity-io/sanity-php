@@ -60,6 +60,6 @@ class RequestException extends BaseException
             return $body['message'];
         }
 
-        return 'Unknown error; body: ' . $body;
+        return 'Unknown error; body: ' . json_encode($body);
     }
 }

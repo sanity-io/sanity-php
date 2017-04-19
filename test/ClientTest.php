@@ -78,6 +78,17 @@ class ClientTest extends TestCase
         $this->assertPreviousRequest(['headers' => ['Sanity-Token' => 'muchsecure']]);
     }
 
+    /**
+     * @expectedException Sanity\Exception\ServerException
+     * @expectedExceptionMessage SomeError - Server returned some error
+     */
+    public function testThrowsServerExceptionOn5xxErrors()
+    {
+        $mockBody = ['error' => 'SomeError', 'message' => 'Server returned some error'];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody, 500)]);
+        $this->client->getDocument('someDocId');
+    }
+
     public function testCanQueryForDocumentsWithoutParams()
     {
         $query = '*[seats >= 2]';
@@ -123,6 +134,20 @@ class ClientTest extends TestCase
             'url' => 'https://abc.api.sanity.io/v1/data/query/production?query=%2A%5Bseats%20%3E%3D%202%5D',
             'headers' => ['Sanity-Token' => 'muchsecure'],
         ]);
+    }
+
+    /**
+     * @expectedException Sanity\Exception\ClientException
+     * @expectedExceptionMessage Param $minSeats referenced, but not provided
+     */
+    public function testThrowsClientExceptionOn4xxErrors()
+    {
+        $mockBody = ['error' => [
+            'description' => 'Param $minSeats referenced, but not provided',
+            'type' => 'queryParseError'
+        ]];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody, 400)]);
+        $this->client->fetch('*[seats >= $minSeats]');
     }
 
     public function testCanCreateDocument()
