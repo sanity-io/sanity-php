@@ -305,6 +305,32 @@ class ClientTest extends TestCase
         ]);
     }
 
+    public function testCanHaveTransactionDocumentsReturned()
+    {
+        $results = [
+            ['id' => '123', 'document' => ['_id' => '123', '_type' => 'bike', 'title' => 'Tandem']],
+            ['id' => '456', 'document' => ['_id' => '456', '_type' => 'bike', 'title' => 'City Bike']]
+        ];
+        $mockBody = ['transactionId' => 'moo', 'results' => $results];
+        $mutations = [
+            ['create' => ['_type' => 'bike', 'title' => 'Tandem']],
+            ['create' => ['_type' => 'bike', 'title' => 'City Bike']]
+        ];
+
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+        $result = $this->client
+            ->transaction($mutations)
+            ->commit(['returnDocuments' => true]);
+
+        $expected = ['123' => $results[0]['document'], '456' => $results[1]['document']];
+        $this->assertEquals($expected, $result);
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
+            'headers' => ['Sanity-Token' => 'muchsecure'],
+            'requestBody' => json_encode(['mutations' => $mutations])
+        ]);
+    }
+
     public function testCanDeleteDocument()
     {
         $mockBody = ['transactionId' => 'fnatt', 'results' => [['id' => 'foobar', 'operation' => 'delete']]];
