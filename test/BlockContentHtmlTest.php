@@ -260,4 +260,10 @@ class BlockContentHtmlTest extends TestCase
         $htmlBuilder = $this->htmlBuilder;
         $this->assertEquals($expected, $htmlBuilder($input));
     }
+
+    public function testCanSerializeDocument() {
+        $input = $this->loadFixture('document.json')['body'];
+        $expected = '<p>Integer leo sapien, aliquet nec sodales et, fermentum id arcu. Sed vitae fermentum erat. Cras vitae fermentum neque. Nunc condimentum justo ut est rutrum, nec varius lectus aliquam. Nunc vulputate nunc scelerisque, pulvinar odio quis, pulvinar tortor. Mauris iaculis enim non nibh condimentum bibendum. Proin imperdiet ligula sed neque laoreet gravida. Proin non lorem a leo venenatis efficitur sit amet et arcu. Suspendisse potenti. Praesent tempus vitae elit vel blandit. Vestibulum sollicitudin metus vel urna sollicitudin egestas.</p><p>Maecenas massa dui, pretium ac quam sed, euismod viverra risus. Nam vehicula, libero eget tincidunt ullamcorper, nibh mauris auctor ex, quis vulputate felis massa ac libero. Praesent eget auctor justo. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas nec purus vel magna pellentesque aliquet. Vestibulum sit amet enim nec nulla tempus maximus. Proin maximus elementum maximus. Pellentesque quis interdum nisl. </p>';
+        $this->assertEquals($expected, BlockContent::toHtml($input));
+    }
 }

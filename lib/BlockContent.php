@@ -21,6 +21,6 @@ class BlockContent
 
     public static function isTree($tree)
     {
-        return !isset($tree['_type']);
+        return !isset($tree['_type']) && !isset($tree[0]['_type']);
     }
 }
