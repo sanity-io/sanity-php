@@ -21,7 +21,7 @@ class HtmlBuilder
             return $this->escape($content);
         }
 
-        $nodes = isset($content['type']) ? [$content] : $content;
+        $nodes = isset($content['_type']) ? [$content] : $content;
         $html = '';
         foreach ($nodes as $node) {
             $children = [];
@@ -39,11 +39,11 @@ class HtmlBuilder
             $values = $node;
             $values['children'] = $children;
 
-            if (!isset($this->serializers[$node['type']])) {
-                throw new ConfigException('No serializer registered for node type "' . $node['type'] . '"');
+            if (!isset($this->serializers[$node['_type']])) {
+                throw new ConfigException('No serializer registered for node type "' . $node['_type'] . '"');
             }
 
-            $serializer = $this->serializers[$node['type']];
+            $serializer = $this->serializers[$node['_type']];
             $serialized = call_user_func($serializer, $values, $parent, $this);
             $html .= $serialized;
         }
