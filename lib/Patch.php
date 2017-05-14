@@ -2,9 +2,12 @@
 namespace Sanity;
 
 use JsonSerializable;
+use Sanity\Util\DocumentPropertyAsserter;
 
 class Patch implements JsonSerializable
 {
+    use DocumentPropertyAsserter;
+
     private $client;
     private $selection;
     private $operations;
