@@ -162,4 +162,22 @@ class PatchTest extends TestCase
             ]
         ], $patch->serialize());
     }
+
+    public function testCanCreateSplicePatches()
+    {
+        $patch = function () { return new Patch('abc123'); };
+        $replaceFirst = $patch()->splice('tags', 0, 1, ['foo'])->serialize();
+        $insertInMiddle = $patch()->splice('tags', 5, 0, ['foo'])->serialize();
+        $deleteLast = $patch()->splice('tags', -1, 1)->serialize();
+        $deleteAllFromIndex = $patch()->splice('tags', 3, -1)->serialize();
+        $allFromIndexDefault = $patch()->splice('tags', 3)->serialize();
+        $negativeDelete = $patch()->splice('tags', -2, -2, ['foo'])->serialize();
+
+        $this->assertEquals($replaceFirst['insert'], ['replace' => 'tags[0:1]', 'items' => ['foo']]);
+        $this->assertEquals($insertInMiddle['insert'], ['replace' => 'tags[5:5]', 'items' => ['foo']]);
+        $this->assertEquals($deleteLast['insert'], ['replace' => 'tags[-2:]', 'items' => []]);
+        $this->assertEquals($deleteAllFromIndex['insert'], ['replace' => 'tags[3:-1]', 'items' => []]);
+        $this->assertEquals($allFromIndexDefault['insert'], ['replace' => 'tags[3:-1]', 'items' => []]);
+        $this->assertEquals($negativeDelete, $patch()->splice('tags', -2, 0, ['foo'])->serialize());
+    }
 }
