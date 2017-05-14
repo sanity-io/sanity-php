@@ -4,23 +4,6 @@ namespace Sanity;
 class Validators
 {
     /**
-     * Validates a given document ID
-     *
-     * @param string $documentId
-     * @throws InvalidArgumentException
-     */
-    public static function validateDocumentId($documentId)
-    {
-        if (!is_string($documentId)) {
-            throw new InvalidArgumentException('Invalid document ID - must be a string');
-        }
-
-        if (!preg_match('#^[a-z0-9_.-]+$#i', $documentId)) {
-            throw new InvalidArgumentException('Invalid document ID');
-        }
-    }
-
-    /**
      * Validates parameters for an insert operation
      *
      * @param string $at Location at which to insert
