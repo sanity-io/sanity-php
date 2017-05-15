@@ -2,6 +2,8 @@
 
 PHP library for the [Sanity API](https://sanity.io/)
 
+[![Packagist](https://img.shields.io/packagist/v/sanity/sanity-php.svg?style=flat-square)](https://packagist.org/packages/sanity/sanity-php)[![Travis](https://img.shields.io/travis/sanity-io/sanity-php.svg?style=flat-square)](https://travis-ci.org/sanity-io/sanity-php)
+
 ## Requirements
 
 sanity-php requires PHP >= 5.5, with the `json` module installed.
