@@ -3,6 +3,7 @@ namespace Sanity;
 
 use JsonSerializable;
 use Sanity\Util\DocumentPropertyAsserter;
+use Sanity\Exception\InvalidArgumentException;
 
 class Patch implements JsonSerializable
 {
@@ -47,7 +48,7 @@ class Patch implements JsonSerializable
     public function remove($attrs)
     {
         if (!is_array($attrs)) {
-            throw new Exception\InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'remove(attrs) takes an array of attributes to unset, non-array given'
             );
         }

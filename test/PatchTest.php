@@ -163,6 +163,36 @@ class PatchTest extends TestCase
         ], $patch->serialize());
     }
 
+    /**
+     * @expectedException Sanity\Exception\InvalidArgumentException
+     * @expectedExceptionMessage "at"-argument which is one of
+     */
+    public function testThrowsWhenCallingInsertWithInvalidAtArgument()
+    {
+        $patch = new Patch('abc123');
+        $patch->insert('foo', 'tags[-1]', ['foo', 'bar']);
+    }
+
+    /**
+     * @expectedException Sanity\Exception\InvalidArgumentException
+     * @expectedExceptionMessage "selector"-argument which must be a string
+     */
+    public function testThrowsWhenCallingInsertWithInvalidSelectorArgument()
+    {
+        $patch = new Patch('abc123');
+        $patch->insert('before', ['tags' => -1], ['foo', 'bar']);
+    }
+
+    /**
+     * @expectedException Sanity\Exception\InvalidArgumentException
+     * @expectedExceptionMessage "items"-argument which must be an array
+     */
+    public function testThrowsWhenCallingInsertWithInvalidItemsArgument()
+    {
+        $patch = new Patch('abc123');
+        $patch->insert('before', 'tags[-1]', 'boing');
+    }
+
     public function testCanCreateSplicePatches()
     {
         $patch = function () { return new Patch('abc123'); };
