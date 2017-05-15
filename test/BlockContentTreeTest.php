@@ -457,4 +457,19 @@ class BlockContentTreeTest extends TestCase
         $actual = BlockContent::ToTree($input);
         $this->assertEquals($expected, $actual);
     }
+
+    public function testCanBeCalledAsInvokable()
+    {
+        $input = $this->loadFixture('non-block.json');
+        $expected = [
+            'type' => 'author',
+            'attributes' => [
+                'name' => 'Test Person'
+            ]
+        ];
+
+        $treeBuilder = new BlockContent\TreeBuilder();
+        $actual = $treeBuilder($input);
+        $this->assertEquals($expected, $actual);
+    }
 }
