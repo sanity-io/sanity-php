@@ -2,8 +2,6 @@
 
 PHP library for the [Sanity API](https://sanity.io/)
 
-**Work in progress**. Transactions are currently not supported.
-
 ## Requirements
 
 sanity-php requires PHP >= 5.5, with the `json` module installed.
