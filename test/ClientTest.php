@@ -17,6 +17,14 @@ class ClientTest extends TestCase
     private $client;
     private $history;
 
+    /**
+     * @before
+     */
+    public function setup()
+    {
+        $this->client = null;
+    }
+
     public function testCanConstructNewClient()
     {
         $this->client = new Client(['projectId' => 'abc', 'dataset' => 'production']);
@@ -175,6 +183,59 @@ class ClientTest extends TestCase
     {
         $this->mockResponses([]);
         $this->client->create(['foo' => 'bar']);
+    }
+
+    public function testCanRunMutationsAndReturnFirstIdOnly()
+    {
+        $document = ['_type' => 'bike', 'seats' => 12, 'name' => 'Dusinsykkel'];
+        $mutations = [['create' => $document]];
+        $result = ['_id' => 'someNewDocId'] + $document;
+        $mockBody = [
+            'transactionId' => 'foo',
+            'results' => [['id' => 'someNewDocId', 'document' => $result]],
+            'documentId' => 'someNewDocId',
+        ];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+
+        $this->assertEquals($mockBody, $this->client->mutate($mutations, [
+            'returnFirst' => true
+        ]));
+
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
+            'headers' => ['Sanity-Token' => 'muchsecure'],
+            'requestBody' => json_encode(['mutations' => $mutations])
+        ]);
+    }
+
+    public function testMutateWillSerializePatchInstance()
+    {
+        $document = ['_id' => 'someDocId', '_type' => 'someType', 'count' => 2];
+        $mockBody = ['transactionId' => 'poc', 'results' => [['id' => 'someDocId', 'document' => $document]]];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+
+        $patch = $this->client->patch('someDocId')->inc(['count' => 1]);
+        $this->client->mutate($patch);
+
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
+            'requestBody' => json_encode(['mutations' => [['patch' => $patch->serialize()]]])
+        ]);
+    }
+
+    public function testMutateWillSerializeTransactionInstance()
+    {
+        $document = ['_id' => 'someDocId', '_type' => 'someType', 'count' => 2];
+        $mockBody = ['transactionId' => 'poc', 'results' => [['id' => 'someDocId', 'document' => $document]]];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+
+        $transaction = $this->client->transaction()->patch('someDocId', ['count' => 1]);
+        $this->client->mutate($transaction);
+
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
+            'requestBody' => json_encode(['mutations' => $transaction->serialize()])
+        ]);
     }
 
     public function testCanCreateDocumentWithVisibilityOption()
@@ -437,6 +498,11 @@ class ClientTest extends TestCase
         $stack = HandlerStack::create(new MockHandler($mocks));
         $stack->push($historyMiddleware);
 
+        $this->initClient($stack);
+    }
+
+    private function initClient($stack = null)
+    {
         $this->client = new Client([
             'projectId' => 'abc',
             'dataset' => 'production',

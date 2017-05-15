@@ -163,7 +163,9 @@ class Client
     public function mutate($mutations, $options = null)
     {
         $mut = $mutations;
-        if ($mut instanceof Patch || $mut instanceof Transaction) {
+        if ($mut instanceof Patch) {
+            $mut = ['patch' => $mut->serialize()];
+        } elseif ($mut instanceof Transaction) {
             $mut = $mut->serialize();
         }
 
@@ -182,7 +184,7 @@ class Client
 
         // Should we return the documents?
         $returnDocuments = isset($options['returnDocuments']) && $options['returnDocuments'];
-        $returnFirst = $returnDocuments && isset($options['returnFirst']) && $options['returnFirst'];
+        $returnFirst = isset($options['returnFirst']) && $options['returnFirst'];
         $results = isset($body['results']) ? $body['results'] : [];
 
         if ($returnDocuments && $returnFirst) {
