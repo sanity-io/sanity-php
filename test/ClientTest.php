@@ -85,7 +85,7 @@ class ClientTest extends TestCase
 
         $this->assertEquals($expected, $this->client->getDocument('someDocId'));
         $this->assertPreviousRequest(['url' => 'https://abc.api.sanity.io/v1/data/doc/production/someDocId']);
-        $this->assertPreviousRequest(['headers' => ['Sanity-Token' => 'muchsecure']]);
+        $this->assertPreviousRequest(['headers' => ['Authorization' => 'Bearer muchsecure']]);
     }
 
     /**
@@ -109,7 +109,7 @@ class ClientTest extends TestCase
         $this->assertEquals($expected, $this->client->fetch($query));
         $this->assertPreviousRequest([
             'url' => 'https://abc.api.sanity.io/v1/data/query/production?query=%2A%5Bseats%20%3E%3D%202%5D',
-            'headers' => ['Sanity-Token' => 'muchsecure'],
+            'headers' => ['Authorization' => 'Bearer muchsecure'],
         ]);
     }
 
@@ -128,7 +128,7 @@ class ClientTest extends TestCase
         $this->assertEquals($expected, $this->client->fetch($query, $params));
         $this->assertPreviousRequest([
             'url' => $expectedUrl,
-            'headers' => ['Sanity-Token' => 'muchsecure'],
+            'headers' => ['Authorization' => 'Bearer muchsecure'],
         ]);
     }
 
@@ -142,7 +142,7 @@ class ClientTest extends TestCase
         $this->assertEquals($mockBody, $this->client->fetch($query, null, ['filterResponse' => false]));
         $this->assertPreviousRequest([
             'url' => 'https://abc.api.sanity.io/v1/data/query/production?query=%2A%5Bseats%20%3E%3D%202%5D',
-            'headers' => ['Sanity-Token' => 'muchsecure'],
+            'headers' => ['Authorization' => 'Bearer muchsecure'],
         ]);
     }
 
@@ -170,7 +170,7 @@ class ClientTest extends TestCase
         $this->assertEquals($result, $this->client->create($document));
         $this->assertPreviousRequest([
             'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
-            'headers' => ['Sanity-Token' => 'muchsecure'],
+            'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => [['create' => $document]]])
         ]);
     }
@@ -203,7 +203,7 @@ class ClientTest extends TestCase
 
         $this->assertPreviousRequest([
             'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
-            'headers' => ['Sanity-Token' => 'muchsecure'],
+            'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => $mutations])
         ]);
     }
@@ -248,7 +248,7 @@ class ClientTest extends TestCase
         $this->assertEquals($result, $this->client->create($document, ['visibility' => 'async']));
         $this->assertPreviousRequest([
             'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true&visibility=async',
-            'headers' => ['Sanity-Token' => 'muchsecure'],
+            'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => [['create' => $document]]])
         ]);
     }
@@ -262,7 +262,7 @@ class ClientTest extends TestCase
         $this->assertEquals($document, $this->client->createIfNotExists($document));
         $this->assertPreviousRequest([
             'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
-            'headers' => ['Sanity-Token' => 'muchsecure'],
+            'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => [['createIfNotExists' => $document]]])
         ]);
     }
@@ -286,7 +286,7 @@ class ClientTest extends TestCase
         $this->assertEquals($document, $this->client->createOrReplace($document));
         $this->assertPreviousRequest([
             'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
-            'headers' => ['Sanity-Token' => 'muchsecure'],
+            'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => [['createOrReplace' => $document]]])
         ]);
     }
@@ -327,7 +327,7 @@ class ClientTest extends TestCase
         $this->assertEquals($document, $newDoc);
         $this->assertPreviousRequest([
             'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
-            'headers' => ['Sanity-Token' => 'muchsecure'],
+            'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => [['patch' => [
                 'id' => 'someDocId',
                 'inc' => ['seats' => 1],
@@ -361,7 +361,7 @@ class ClientTest extends TestCase
         $this->assertEquals($expected, $result);
         $this->assertPreviousRequest([
             'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true',
-            'headers' => ['Sanity-Token' => 'muchsecure'],
+            'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => [['create' => [
                 '_type' => 'bike'
             ]]]])
@@ -389,7 +389,7 @@ class ClientTest extends TestCase
         $this->assertEquals($expected, $result);
         $this->assertPreviousRequest([
             'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
-            'headers' => ['Sanity-Token' => 'muchsecure'],
+            'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => $mutations])
         ]);
     }
@@ -403,7 +403,7 @@ class ClientTest extends TestCase
         $this->assertEquals($expected, $this->client->delete('foobar'));
         $this->assertPreviousRequest([
             'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true',
-            'headers' => ['Sanity-Token' => 'muchsecure'],
+            'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => [['delete' => ['id' => 'foobar']]]])
         ]);
     }

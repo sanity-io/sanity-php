@@ -299,7 +299,7 @@ class Client
     {
         $headers = isset($options['headers']) ? $options['headers'] : [];
         if (isset($this->clientConfig['token'])) {
-            $headers['Sanity-Token'] = $this->clientConfig['token'];
+            $headers['Authorization'] = 'Bearer ' . $this->clientConfig['token'];
         }
 
         $method = isset($options['method']) ? $options['method'] : 'GET';
