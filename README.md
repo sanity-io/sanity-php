@@ -46,7 +46,7 @@ $document = $client->getDocument('someDocumentId');
 
 ```php
 $results = $client->fetch(
-  '*[is $type][0...3]', // Query
+  '*[_type == $type][0...3]', // Query
   ['type' => 'product'] // Params (optional)
 );
 
