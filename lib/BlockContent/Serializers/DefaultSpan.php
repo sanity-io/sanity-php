@@ -13,7 +13,7 @@ class DefaultSpan
             $tail .= is_array($markTag) ? $markTag['tail'] : '</' . $markTag . '>';
         }
 
-        if (isset($span['attributes']['link'])) {
+        if (isset($span['attributes']['link']['href'])) {
             $head .= '<a href="' . $span['attributes']['link']['href'] . '">';
             $tail = '</a>' . $tail;
         }

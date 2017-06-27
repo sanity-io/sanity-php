@@ -7,7 +7,7 @@ class BlockHandler
     {
         return [
             'type' => 'block',
-            'style' => $block['style'],
+            'style' => isset($block['style']) ? $block['style'] : 'normal',
             'content' => isset($block['spans']) ? $treeBuilder->parseSpans($block['spans']) : [],
         ];
     }
