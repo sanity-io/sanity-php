@@ -10,6 +10,7 @@ use Sanity\Client;
 use Sanity\Patch;
 use Sanity\Transaction;
 use Sanity\Selection;
+use Sanity\Version;
 use Sanity\Exception\ServerException;
 
 class ClientTest extends TestCase
@@ -86,6 +87,17 @@ class ClientTest extends TestCase
         $this->assertEquals($expected, $this->client->getDocument('someDocId'));
         $this->assertPreviousRequest(['url' => 'https://abc.api.sanity.io/v1/data/doc/production/someDocId']);
         $this->assertPreviousRequest(['headers' => ['Authorization' => 'Bearer muchsecure']]);
+    }
+
+    public function testIncludesUserAgent()
+    {
+        $expected = ['_id' => 'someDocId', '_type' => 'bike', 'name' => 'Tandem Extraordinaire'];
+        $mockBody = ['documents' => [$expected]];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+
+        $this->assertEquals($expected, $this->client->getDocument('someDocId'));
+        $this->assertPreviousRequest(['url' => 'https://abc.api.sanity.io/v1/data/doc/production/someDocId']);
+        $this->assertPreviousRequest(['headers' => ['User-Agent' => 'sanity-php ' . Version::VERSION]]);
     }
 
     /**

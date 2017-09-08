@@ -298,6 +298,8 @@ class Client
     private function getRequest($options)
     {
         $headers = isset($options['headers']) ? $options['headers'] : [];
+        $headers['User-Agent'] = 'sanity-php ' . Version::VERSION;
+
         if (isset($this->clientConfig['token'])) {
             $headers['Authorization'] = 'Bearer ' . $this->clientConfig['token'];
         }
