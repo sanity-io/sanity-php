@@ -7,15 +7,23 @@ class DefaultSpan
     {
         $head = '';
         $tail = '';
-        $markTag = isset($span['mark']) ? $htmlBuilder->getMarkSerializer($span['mark']) : null;
-        if ($markTag) {
-            $head .= is_array($markTag) ? $markTag['head'] : '<' . $markTag . '>';
-            $tail .= is_array($markTag) ? $markTag['tail'] : '</' . $markTag . '>';
-        }
+        $mark = isset($span['mark'])
+            ? $htmlBuilder->getMarkSerializer($span['mark'])
+            : null;
 
-        if (isset($span['attributes']['link']['href'])) {
-            $head .= '<a href="' . $span['attributes']['link']['href'] . '">';
-            $tail = '</a>' . $tail;
+        if ($mark && is_string($mark)) {
+            $head .= '<' . $mark . '>';
+            $tail .= '</' . $mark . '>';
+        } elseif ($mark && is_callable($mark)) {
+            return $mark($span['mark'], $span['children']);
+        } elseif ($mark && is_array($mark)) {
+            $head .= is_callable($mark['head'])
+                ? $mark['head']($span['mark'])
+                : $mark['head'];
+
+            $tail .= is_callable($mark['tail'])
+                ? $mark['tail']($span['mark'])
+                : $mark['tail'];
         }
 
         return $head . implode('', $span['children']) . $tail;

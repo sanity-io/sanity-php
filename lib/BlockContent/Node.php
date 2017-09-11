@@ -5,6 +5,7 @@ class Node
 {
     public $type;
     public $mark;
+    public $markKey;
     public $content = [];
 
     public function __construct($node = null)
@@ -15,6 +16,7 @@ class Node
 
         $this->type = $node['type'];
         $this->mark = $node['mark'];
+        $this->markKey = $node['markKey'];
         $this->content = $node['content'];
     }
 

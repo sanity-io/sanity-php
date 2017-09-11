@@ -64,8 +64,10 @@ class HtmlBuilder
 
     public function getMarkSerializer($mark)
     {
-        return isset($this->serializers['marks'][$mark])
-            ? $this->serializers['marks'][$mark]
+        $markName = isset($mark['_type']) ? $mark['_type'] : $mark;
+
+        return isset($this->serializers['marks'][$markName])
+            ? $this->serializers['marks'][$markName]
             : null;
     }
 
@@ -91,6 +93,12 @@ class HtmlBuilder
                     'head' => '<span style="text-decoration: underline;">',
                     'tail' => '</span>',
                 ],
+                'link' => [
+                    'head' => function ($mark) {
+                        return '<a href="' . $mark['href'] . '">';
+                    },
+                    'tail' => '</a>'
+                ]
             ]
         ];
     }

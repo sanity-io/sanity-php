@@ -5,6 +5,11 @@ use Sanity\BlockContent;
 
 class BlockContentTreeTest extends TestCase
 {
+    public function __construct()
+    {
+        BlockContent::$useStaticKeys = true;
+    }
+
     public function testHandlesNormalTextBlock()
     {
         $input = $this->loadFixture('normal-text.json');
@@ -207,10 +212,10 @@ class BlockContentTreeTest extends TestCase
                 'String before link ',
                 [
                     'type' => 'span',
-                    'attributes' => [
-                        'link' => [
-                            'href' => 'http://icanhas.cheezburger.com/'
-                        ]
+                    'mark' => [
+                        '_type' => 'link',
+                        '_key' => '6721bbe',
+                        'href' => 'http://icanhas.cheezburger.com/'
                     ],
                     'content' => [
                         'actual link text'
@@ -233,48 +238,68 @@ class BlockContentTreeTest extends TestCase
                 'String with link to ',
                 [
                     'type' => 'span',
-                    'attributes' => [
-                        'link' => [
-                            'href' => 'http://icanhas.cheezburger.com/'
-                        ]
+                    'mark' => [
+                        '_type' => 'link',
+                        '_key' => '6721bbe',
+                        'href' => 'http://icanhas.cheezburger.com/'
                     ],
                     'content' => [
-                        'internet '
-                    ]
-                ],
-                [
-                    'content' => [
+                        'internet ',
                         [
+                            'type' => 'span',
+                            'mark' => 'em',
                             'content' => [
                                 [
                                     'type' => 'span',
-                                    'attributes' => [
-                                        'link' => [
-                                            'href' => 'http://icanhas.cheezburger.com/'
-                                        ]
-                                    ],
+                                    'mark' => 'strong',
                                     'content' => [
                                         'is very strong and emphasis'
                                     ]
-                                ]
-                            ],
-                            'type' => 'span',
-                            'mark' => 'strong'
-                        ],
-                        [
-                            'type' => 'span',
-                            'attributes' => [
-                                'link' => [
-                                    'href' => 'http://icanhas.cheezburger.com/'
-                                ]
-                            ],
-                            'content' => [
+                                ],
                                 ' and just emphasis'
                             ]
                         ]
-                    ],
+                    ]
+                ],
+                '.'
+            ]
+        ];
+        $actual = BlockContent::ToTree($input);
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testHandlesMessyLinkTextWithNewStructure()
+    {
+        $input = $this->loadFixture('link-messy-text-new.json');
+        $expected = [
+            'type' => 'block',
+            'style' => 'normal',
+            'content' => [
+                'String with link to ',
+                [
                     'type' => 'span',
-                    'mark' => 'em'
+                    'mark' => [
+                        '_type' => 'link',
+                        '_key' => 'zomgLink',
+                        'href' => 'http://icanhas.cheezburger.com/'
+                    ],
+                    'content' => [
+                        'internet ',
+                        [
+                            'type' => 'span',
+                            'mark' => 'em',
+                            'content' => [
+                                [
+                                    'type' => 'span',
+                                    'mark' => 'strong',
+                                    'content' => [
+                                        'is very strong and emphasis'
+                                    ]
+                                ],
+                                ' and just emphasis'
+                            ]
+                        ]
+                    ]
                 ],
                 '.'
             ]

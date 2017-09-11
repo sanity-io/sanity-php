@@ -1,6 +1,8 @@
 <?php
 namespace Sanity\BlockContent;
 
+use Sanity\BlockContent;
+
 class TreeBuilder
 {
     public $typeHandlers = [];
@@ -21,13 +23,14 @@ class TreeBuilder
 
     public function build($content)
     {
+        $content = BlockContent::migrate($content);
         $isArray = !isset($content['_type']);
         return $isArray
             ? $this->parseArray($content)
             : $this->parseBlock($content);
     }
 
-    public function parseSpans($spans)
+    public function parseSpans($spans, $parent)
     {
         $unwantedKeys = array_flip(['_type', 'text', 'marks']);
 
@@ -44,7 +47,7 @@ class TreeBuilder
             // Start at position one. Root is always plain and should never be removed. (?)
             if ($stackLength > 1) {
                 for (; $pos < $stackLength; $pos++) {
-                    $mark = $nodeStack[$pos]->mark;
+                    $mark = $nodeStack[$pos]->markKey;
                     $index = array_search($mark, $marksAsNeeded);
 
                     if ($index === false) {
@@ -63,7 +66,8 @@ class TreeBuilder
             foreach ($marksAsNeeded as $mark) {
                 $node = new Node([
                     'content' => [],
-                    'mark' => $mark,
+                    'mark' => $this->findMark($mark, $parent),
+                    'markKey' => $mark,
                     'type' => 'span',
                 ]);
 
@@ -85,6 +89,18 @@ class TreeBuilder
 
         $serialized = $nodeStack[0]->serialize();
         return $serialized['content'];
+    }
+
+    private function findMark($mark, $parent)
+    {
+        $markDefs = isset($parent['markDefs']) ? $parent['markDefs'] : [];
+        foreach ($markDefs as $markDef) {
+            if (isset($markDef['_key']) && $markDef['_key'] === $mark) {
+                return $markDef;
+            }
+        }
+
+        return $mark;
     }
 
     public function parseArray($blocks)

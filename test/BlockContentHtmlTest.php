@@ -12,6 +12,8 @@ class BlockContentHtmlTest extends TestCase
 
     public function __construct()
     {
+        BlockContent::$useStaticKeys = true;
+
         $defaultSpan = new DefaultSpan();
         $serializers = [
             'author' => function ($author) {
@@ -30,22 +32,19 @@ class BlockContentHtmlTest extends TestCase
             'listItem' => function($item) {
                 return '<li class="foo">' . implode('', $item['children']) . '</li>';
             },
-            'span' => function($node, $parent, $htmlBuilder) use ($defaultSpan) {
-                $result = '';
-                if (isset($node['attributes']['author'])) {
-                    $result = '<div>'. $node['attributes']['author']['name'] . '</div>';
-                }
-                if (isset($node['attributes']['link'])) {
-                    $result .= '<a class="foo" href="' . $node['attributes']['link']['href'] . '">';
-                    $result .= implode('', $node['children']);
-                    $result .= '</a>';
-                    return $result;
-                }
 
-                return $defaultSpan($node, $parent, $htmlBuilder);
-            },
-
-            'marks' => ['em' => null]
+            'marks' => [
+                'em' => null,
+                'author' => function ($mark, $children) {
+                    return '<div>' . $mark['name'] . '</div>' . implode('', $children);
+                },
+                'link' => [
+                    'head' => function ($mark) {
+                        return '<a class="foo" href="' . $mark['href'] . '">';
+                    },
+                    'tail' => '</a>'
+                ]
+            ]
         ];
         $this->htmlBuilder = new HtmlBuilder();
         $this->customHtmlBuilder = new HtmlBuilder(['serializers' => $serializers]);
@@ -133,8 +132,8 @@ class BlockContentHtmlTest extends TestCase
     public function testHandlesSimpleLinkTextWithSeveralAttributesWithCustomSerializer()
     {
         $input = BlockContent::toTree($this->loadFixture('link-author-text.json'));
-        $expected = '<p class="foo">String before link <div>Test Testesen</div>'
-            . '<a class="foo" href="http://icanhas.cheezburger.com/">actual link text</a> the rest</p>';
+        $expected = '<p class="foo">String before link '
+            . '<a class="foo" href="http://icanhas.cheezburger.com/"><div>Test Testesen</div>actual link text</a> the rest</p>';
         $this->assertEquals($expected, $this->customHtmlBuilder->build($input));
     }
 
@@ -142,9 +141,14 @@ class BlockContentHtmlTest extends TestCase
     public function testHandlesMessyLinkText()
     {
         $input = BlockContent::toTree($this->loadFixture('link-messy-text.json'));
-        $expected = '<p>String with link to <a href="http://icanhas.cheezburger.com/">internet </a>'
-            . '<em><strong><a href="http://icanhas.cheezburger.com/">is very strong and emphasis</a></strong>'
-            . '<a href="http://icanhas.cheezburger.com/"> and just emphasis</a></em>.</p>';
+        $expected = '<p>String with link to <a href="http://icanhas.cheezburger.com/">internet <em><strong>is very strong and emphasis</strong> and just emphasis</em></a>.</p>';
+        $this->assertEquals($expected, $this->htmlBuilder->build($input));
+    }
+
+    public function testHandlesMessyLinkTextWithNewStructure()
+    {
+        $input = BlockContent::toTree($this->loadFixture('link-messy-text-new.json'));
+        $expected = '<p>String with link to <a href="http://icanhas.cheezburger.com/">internet <em><strong>is very strong and emphasis</strong> and just emphasis</em></a>.</p>';
         $this->assertEquals($expected, $this->htmlBuilder->build($input));
     }
 

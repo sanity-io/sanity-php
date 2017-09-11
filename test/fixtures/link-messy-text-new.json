@@ -1,0 +1,47 @@
+{
+  "_type": "block",
+  "style": "normal",
+  "markDefs": [
+    {
+      "_type": "link",
+      "_key": "zomgLink",
+      "href": "http://icanhas.cheezburger.com/"
+    }
+  ],
+  "children": [
+    {
+      "_type": "span",
+      "text": "String with link to ",
+      "marks": []
+    },
+    {
+      "_type": "span",
+      "text": "internet ",
+      "marks": [
+        "zomgLink"
+      ]
+    },
+    {
+      "_type": "span",
+      "text": "is very strong and emphasis",
+      "marks": [
+        "zomgLink",
+        "strong",
+        "em"
+      ]
+    },
+    {
+      "_type": "span",
+      "text": " and just emphasis",
+      "marks": [
+        "em",
+        "zomgLink"
+      ]
+    },
+    {
+      "_type": "span",
+      "text": ".",
+      "marks": []
+    }
+  ]
+}
