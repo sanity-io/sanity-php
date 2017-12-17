@@ -55,7 +55,7 @@ foreach ($product in $results) {
 }
 ```
 
-See the [query documentation](https://sanity.io/docs/query/#query-cheat-sheet) for more information on how to write queries.
+See the [query documentation](https://www.sanity.io/docs/front-ends/query-cheat-sheet) for more information on how to write queries.
 
 ### Creating documents
 
