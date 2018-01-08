@@ -5,6 +5,7 @@ use Exception;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
+use Sanity\BlockContent;
 use Sanity\Exception\ClientException;
 use Sanity\Exception\ConfigException;
 use Sanity\Exception\ServerException;

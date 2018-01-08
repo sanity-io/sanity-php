@@ -7,12 +7,18 @@ class HtmlBuilder
 {
     private $serializers;
     private $charset;
+    private $projectId;
+    private $dataset;
+    private $imageOptions;
 
     public function __construct($options = [])
     {
         $serializers = isset($options['serializers']) ? $options['serializers'] : [];
         $this->serializers = array_replace_recursive($this->getDefaultSerializers(), $serializers);
         $this->charset = isset($options['charset']) ? $options['charset'] : 'utf-8';
+        $this->imageOptions = isset($options['imageOptions']) ? $options['imageOptions'] : [];
+        $this->projectId = isset($options['projectId']) ? $options['projectId'] : null;
+        $this->dataset = isset($options['dataset']) ? $options['dataset'] : null;
     }
 
     public function build($content, $parent = null)
@@ -71,6 +77,21 @@ class HtmlBuilder
             : null;
     }
 
+    public function getImageOptions()
+    {
+        return $this->imageOptions;
+    }
+
+    public function getProjectId()
+    {
+        return $this->projectId;
+    }
+
+    public function getDataset()
+    {
+        return $this->dataset;
+    }
+
     private function wrapInListItems($items)
     {
         return array_map(function ($item) {
@@ -85,6 +106,7 @@ class HtmlBuilder
             'list' => new Serializers\DefaultList(),
             'listItem' => new Serializers\DefaultListItem(),
             'span' => new Serializers\DefaultSpan(),
+            'image' => new Serializers\DefaultImage(),
             'marks' => [
                 'em' => 'em',
                 'code' => 'code',

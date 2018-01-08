@@ -202,7 +202,11 @@ use Sanity\BlockContent;
 $document = $client->getDocument('some-doc');
 $article = $document['article']; // The field that contains your block content
 
-$html = BlockContent::toHtml($article);
+$html = BlockContent::toHtml($article, [
+    'projectId'    => 'abc123',
+    'dataset'      => 'bikeshop',
+    'imageOptions' => ['w' => 320, 'h' => 240]
+]);
 ```
 
 If you have some custom types, or would like to customize the rendering, you may pass an associative array of serializers:

@@ -46,8 +46,12 @@ class BlockContentHtmlTest extends TestCase
                 ]
             ]
         ];
-        $this->htmlBuilder = new HtmlBuilder();
         $this->customHtmlBuilder = new HtmlBuilder(['serializers' => $serializers]);
+        $this->htmlBuilder = new HtmlBuilder([
+            'projectId' => 'abc123',
+            'dataset' => 'prod',
+            'imageOptions' => ['fit' => 'crop', 'w' => 320, 'h' => 240]
+        ]);
     }
 
     public function testHandlesPlainStringBlock()
@@ -135,6 +139,14 @@ class BlockContentHtmlTest extends TestCase
         $expected = '<p class="foo">String before link '
             . '<a class="foo" href="http://icanhas.cheezburger.com/"><div>Test Testesen</div>actual link text</a> the rest</p>';
         $this->assertEquals($expected, $this->customHtmlBuilder->build($input));
+    }
+
+    public function testHandlesImages()
+    {
+        $input = BlockContent::toTree($this->loadFixture('images.json'));
+        $expected = '<p>Also, images are pretty common.</p>'
+            . '<figure><img src="https://cdn.sanity.io/images/abc123/prod/YiOKD0O6AdjKPaK24WtbOEv0-3456x2304.jpg?fit=crop&w=320&h=240" /></figure>';
+        $this->assertEquals($expected, $this->htmlBuilder->build($input));
     }
 
 
