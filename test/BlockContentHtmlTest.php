@@ -4,6 +4,7 @@ namespace SanityTest;
 use Sanity\BlockContent;
 use Sanity\BlockContent\HtmlBuilder;
 use Sanity\BlockContent\Serializers\DefaultSpan;
+use SanityTest\Serializers\MyCustomImageSerializer;
 
 class BlockContentHtmlTest extends TestCase
 {
@@ -149,6 +150,23 @@ class BlockContentHtmlTest extends TestCase
         $this->assertEquals($expected, $this->htmlBuilder->build($input));
     }
 
+    public function testAllowsOverridingImageSerializer()
+    {
+        $htmlBuilder = new HtmlBuilder([
+            'serializers' => ['image' => new MyCustomImageSerializer()],
+            'projectId' => 'abc123',
+            'dataset' => 'prod',
+            'imageOptions' => ['fit' => 'crop', 'w' => 320, 'h' => 240]
+        ]);
+
+        $input = BlockContent::toTree($this->loadFixture('image-with-caption.json'));
+        $url = 'https://cdn.sanity.io/images/abc123/prod/YiOKD0O6AdjKPaK24WtbOEv0-3456x2304.jpg?fit=crop&w=320&h=240';
+        $expected = '<p>Also, images are pretty common.</p>'
+            . '<figure><img src="' . $url . '" />'
+            . '<figcaption>Now ==&gt; THIS &lt;== is a caption</figcaption>'
+            . '</figure>';
+        $this->assertEquals($expected, $htmlBuilder->build($input));
+    }
 
     public function testHandlesMessyLinkText()
     {

@@ -11,7 +11,7 @@ class DefaultImage
         return '<figure><img src="' . $url . '" /></figure>';
     }
 
-    private function getImageUrl($item, $htmlBuilder)
+    protected function getImageUrl($item, $htmlBuilder)
     {
         $helpUrl = 'https://github.com/sanity-io/sanity-php#rendering-block-content';
 
