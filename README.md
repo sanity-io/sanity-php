@@ -6,7 +6,7 @@ PHP library for the [Sanity API](https://sanity.io/)
 
 ## Requirements
 
-sanity-php requires PHP >= 5.5, with the `json` module installed.
+sanity-php requires PHP >= 5.6, with the `json` module installed.
 
 ## Composer
 
