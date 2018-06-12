@@ -59,6 +59,7 @@ class Client
         $body = $this->request([
             'url' => '/data/query/' . $this->clientConfig['dataset'],
             'query' => $queryParams,
+            'cdnAllowed' => true
         ]);
 
         return $unfilteredResponse ? $body :  $body['result'];
@@ -73,7 +74,8 @@ class Client
     public function getDocument($id)
     {
         $body = $this->request([
-            'url' => '/data/doc/' . $this->clientConfig['dataset'] . '/' . $id
+            'url' => '/data/doc/' . $this->clientConfig['dataset'] . '/' . $id,
+            'cdnAllowed' => true
         ]);
         return $body['documents'][0];
     }
@@ -301,13 +303,23 @@ class Client
         $headers = isset($options['headers']) ? $options['headers'] : [];
         $headers['User-Agent'] = 'sanity-php ' . Version::VERSION;
 
-        if (isset($this->clientConfig['token'])) {
+        if (!empty($this->clientConfig['token'])) {
             $headers['Authorization'] = 'Bearer ' . $this->clientConfig['token'];
         }
 
         $method = isset($options['method']) ? $options['method'] : 'GET';
         $body = isset($options['body']) ? $options['body'] : null;
-        $url = $this->clientConfig['url'] . $options['url'];
+        $cdnAllowed = (
+            isset($options['cdnAllowed']) &&
+            $options['cdnAllowed'] &&
+            $this->clientConfig['useCdn']
+        );
+
+        $baseUrl = $cdnAllowed
+            ? $this->clientConfig['cdnUrl']
+            : $this->clientConfig['url'];
+
+        $url = $baseUrl . $options['url'];
 
         return new Request($method, $url, $headers, $body);
     }
@@ -326,6 +338,7 @@ class Client
         $newConfig = array_replace_recursive($this->defaultConfig, $this->clientConfig, $config);
         $apiVersion = $newConfig['apiVersion'];
         $projectBased = $newConfig['useProjectHostname'];
+        $useCdn = isset($newConfig['useCdn']) ? $newConfig['useCdn'] : false;
         $projectId = isset($newConfig['projectId']) ? $newConfig['projectId'] : null;
         $dataset = isset($newConfig['dataset']) ? $newConfig['dataset'] : null;
 
@@ -335,6 +348,12 @@ class Client
 
         if ($projectBased && !$dataset) {
             throw new ConfigException('Configuration must contain `dataset`');
+        }
+
+        if ($useCdn && !empty($newConfig['token'])) {
+            throw new ConfigException(
+                'Cannot combine `useCdn` option with `token` as authenticated requests cannot be cached'
+            );
         }
 
         $hostParts = explode('://', $newConfig['apiHost']);
@@ -347,6 +366,8 @@ class Client
             $newConfig['url'] = $newConfig['apiHost'] . $apiVersion;
         }
 
+        $newConfig['useCdn'] = $useCdn;
+        $newConfig['cdnUrl'] = preg_replace('#(/|\.)api.sanity.io/#', '$1apicdn.sanity.io/', $newConfig['url']);
         return $newConfig;
     }
 

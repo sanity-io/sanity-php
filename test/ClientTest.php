@@ -34,6 +34,20 @@ class ClientTest extends TestCase
 
     /**
      * @expectedException Sanity\Exception\ConfigException
+     * @expectedExceptionMessage Cannot combine `useCdn` option with `token` as authenticated requests cannot be cached
+     */
+    public function testThrowsWhenConstructingNewClientWithTokenAndCdnOption()
+    {
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+            'useCdn' => true,
+            'token' => 'foo'
+        ]);
+    }
+
+    /**
+     * @expectedException Sanity\Exception\ConfigException
      * @expectedExceptionMessage Configuration must contain `projectId`
      */
     public function testThrowsWhenConstructingClientWithoutProjectId()
@@ -87,6 +101,16 @@ class ClientTest extends TestCase
         $this->assertEquals($expected, $this->client->getDocument('someDocId'));
         $this->assertPreviousRequest(['url' => 'https://abc.api.sanity.io/v1/data/doc/production/someDocId']);
         $this->assertPreviousRequest(['headers' => ['Authorization' => 'Bearer muchsecure']]);
+    }
+
+    public function testCanGetDocumentFromCdn()
+    {
+        $expected = ['_id' => 'someDocId', '_type' => 'bike', 'name' => 'Tandem Extraordinaire'];
+        $mockBody = ['documents' => [$expected]];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)], ['useCdn' => true, 'token' => null]);
+
+        $this->assertEquals($expected, $this->client->getDocument('someDocId'));
+        $this->assertPreviousRequest(['url' => 'https://abc.apicdn.sanity.io/v1/data/doc/production/someDocId']);
     }
 
     public function testIncludesUserAgent()
@@ -158,6 +182,19 @@ class ClientTest extends TestCase
         ]);
     }
 
+    public function testCanQueryForDocumentsFromCdn()
+    {
+        $query = '*[seats >= 2]';
+        $expected = [['_id' => 'someDocId', '_type' => 'bike', 'name' => 'Tandem Extraordinaire', 'seats' => 2]];
+        $mockBody = ['result' => $expected];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)], ['useCdn' => true, 'token' => null]);
+
+        $this->assertEquals($expected, $this->client->fetch($query));
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.apicdn.sanity.io/v1/data/query/production?query=%2A%5Bseats%20%3E%3D%202%5D'
+        ]);
+    }
+
     /**
      * @expectedException Sanity\Exception\ClientException
      * @expectedExceptionMessage Param $minSeats referenced, but not provided
@@ -183,6 +220,20 @@ class ClientTest extends TestCase
         $this->assertPreviousRequest([
             'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
             'headers' => ['Authorization' => 'Bearer muchsecure'],
+            'requestBody' => json_encode(['mutations' => [['create' => $document]]])
+        ]);
+    }
+
+    public function testDoesNotUseCdnForMutations()
+    {
+        $document = ['_type' => 'bike', 'seats' => 12, 'name' => 'Dusinsykkel'];
+        $result = ['_id' => 'someNewDocId'] + $document;
+        $mockBody = ['results' => [['id' => 'someNewDocId', 'document' => $result]]];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)], ['useCdn' => true, 'token' => null]);
+
+        $this->assertEquals($result, $this->client->create($document));
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
             'requestBody' => json_encode(['mutations' => [['create' => $document]]])
         ]);
     }
@@ -502,7 +553,7 @@ class ClientTest extends TestCase
     /**
      * Helpers
      */
-    private function mockResponses($mocks)
+    private function mockResponses($mocks, $clientOptions = [])
     {
         $this->history = [];
         $historyMiddleware = Middleware::history($this->history);
@@ -510,17 +561,17 @@ class ClientTest extends TestCase
         $stack = HandlerStack::create(new MockHandler($mocks));
         $stack->push($historyMiddleware);
 
-        $this->initClient($stack);
+        $this->initClient($stack, $clientOptions);
     }
 
-    private function initClient($stack = null)
+    private function initClient($stack = null, $clientOptions = [])
     {
-        $this->client = new Client([
+        $this->client = new Client(array_merge([
             'projectId' => 'abc',
             'dataset' => 'production',
             'token' => 'muchsecure',
             'handler' => $stack,
-        ]);
+        ], $clientOptions));
     }
 
     private function mockJsonResponseBody($body, $statusCode = 200)

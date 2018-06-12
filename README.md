@@ -32,7 +32,20 @@ use Sanity\Client as SanityClient;
 $client = new SanityClient([
   'projectId' => 'your-project-id',
   'dataset' => 'your-dataset-name',
-  'token' => 'sanity-auth-token', // or leave blank to be an anonymous user
+  'useCdn' => true, // Whether or not to use the API CDN. Default is false.
+]);
+```
+
+### Using an authorization token
+
+```php
+$client = new SanityClient([
+  'projectId' => 'your-project-id',
+  'dataset' => 'your-dataset-name',
+  'useCdn' => false,
+  // Note that you cannot combine a token with the `useCdn` option set to true,
+  // as authenticated requests cannot be cached
+  'token' => 'sanity-auth-token',
 ]);
 ```
 
@@ -218,10 +231,13 @@ $html = BlockContent::toHtml($article, [
       return '<li class="my-list-item">' . implode('\n', $item['children']) . '</li>';
     },
     'geopoint' => function ($item) {
-      $attrs = $author['attributes']
+      $attrs = $item['attributes']
       $url = 'https://www.google.com/maps/embed/v1/place?key=someApiKey&center='
       $url .= $attrs['lat'] . ',' . $attrs['lng'];
       return '<iframe class="geomap" src="' . $url . '" allowfullscreen></iframe>'
+    },
+    'pet' => function ($item, $parent, $htmlBuilder) {
+      return '<p class="pet">' . $htmlBuilder->escape($item['attributes']['name']) . '</p>';
     }
   ]
 ]);
