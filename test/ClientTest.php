@@ -1,6 +1,9 @@
 <?php
 namespace SanityTest;
 
+use DateInterval;
+use DateTimeZone;
+use DateTimeImmutable;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Handler\MockHandler;
@@ -16,6 +19,7 @@ use Sanity\Exception\ServerException;
 class ClientTest extends TestCase
 {
     private $client;
+    private $errors;
     private $history;
 
     /**
@@ -24,12 +28,69 @@ class ClientTest extends TestCase
     public function setup()
     {
         $this->client = null;
+        $this->errors = [];
+        set_error_handler(array($this, 'errorHandler'));
+    }
+
+    public function errorHandler($errno, $errstr, $errfile, $errline, $errcontext)
+    {
+        $this->errors[] = compact('errno', 'errstr', 'errfile', 'errline', 'errcontext');
     }
 
     public function testCanConstructNewClient()
     {
-        $this->client = new Client(['projectId' => 'abc', 'dataset' => 'production']);
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+            'apiVersion' => '2019-01-01',
+        ]);
         $this->assertInstanceOf(Client::class, $this->client);
+    }
+
+    public function testWarnsOnNoApiVersionSpecified()
+    {
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+        ]);
+        $this->assertInstanceOf(Client::class, $this->client);
+        $this->assertErrorTriggered(Client::NO_API_VERSION_WARNING, E_USER_DEPRECATED);
+    }
+
+    public function testWarnsOnTomorrowUtcDateApiVersion()
+    {
+        $currentDate = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $currentDate = $currentDate->setTime(0, 0, 0, 0);
+        $tomorrow = $currentDate->add(new DateInterval('P01D'));
+
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+            'apiVersion' => $tomorrow->format('Y-m-d'),
+        ]);
+        $this->assertInstanceOf(Client::class, $this->client);
+        $this->assertErrorTriggered(sprintf(
+            Client::TOMORROW_API_VERSION_WARNING,
+            $currentDate->format('Y-m-d'),
+            $tomorrow->format('Y-m-d'),
+            $currentDate->format('Y-m-d')
+        ), E_USER_WARNING);
+    }
+
+    /**
+     * @expectedException Sanity\Exception\ConfigException
+     * @expectedExceptionMessage could introduce breaking changes
+     */
+    public function testThrowsOnFutureUtcDateApiVersion()
+    {
+        $currentDate = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $futureDate = $currentDate->add(new DateInterval('P03D'));
+
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+            'apiVersion' => $futureDate->format('Y-m-d'),
+        ]);
     }
 
     /**
@@ -42,7 +103,8 @@ class ClientTest extends TestCase
             'projectId' => 'abc',
             'dataset' => 'production',
             'useCdn' => true,
-            'token' => 'foo'
+            'token' => 'foo',
+            'apiVersion' => '2019-01-01',
         ]);
     }
 
@@ -52,7 +114,10 @@ class ClientTest extends TestCase
      */
     public function testThrowsWhenConstructingClientWithoutProjectId()
     {
-        $this->client = new Client(['dataset' => 'production']);
+        $this->client = new Client([
+            'dataset' => 'production',
+            'apiVersion' => '2019-01-01',
+        ]);
     }
 
     /**
@@ -61,12 +126,16 @@ class ClientTest extends TestCase
      */
     public function testThrowsWhenConstructingClientWithoutDataset()
     {
-        $this->client = new Client(['projectId' => 'abc']);
+        $this->client = new Client(['projectId' => 'abc', 'apiVersion' => '2019-01-01']);
     }
 
     public function testCanSetAndGetConfig()
     {
-        $this->client = new Client(['projectId' => 'abc', 'dataset' => 'production']);
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+            'apiVersion' => '2019-01-01',
+        ]);
         $this->assertEquals('production', $this->client->config()['dataset']);
         $this->assertEquals($this->client, $this->client->config(['dataset' => 'staging']));
         $this->assertEquals('staging', $this->client->config()['dataset']);
@@ -86,6 +155,7 @@ class ClientTest extends TestCase
             'useProjectHostname' => false,
             'handler' => $stack,
             'token' => 'mytoken',
+            'apiVersion' => '2019-01-22',
         ]);
 
         $response = $this->client->request(['url' => '/projects']);
@@ -96,10 +166,10 @@ class ClientTest extends TestCase
     {
         $expected = ['_id' => 'someDocId', '_type' => 'bike', 'name' => 'Tandem Extraordinaire'];
         $mockBody = ['documents' => [$expected]];
-        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)], ['apiVersion' => '2019-01-20']);
 
         $this->assertEquals($expected, $this->client->getDocument('someDocId'));
-        $this->assertPreviousRequest(['url' => 'https://abc.api.sanity.io/v1/data/doc/production/someDocId']);
+        $this->assertPreviousRequest(['url' => 'https://abc.api.sanity.io/v2019-01-20/data/doc/production/someDocId']);
         $this->assertPreviousRequest(['headers' => ['Authorization' => 'Bearer muchsecure']]);
     }
 
@@ -110,7 +180,7 @@ class ClientTest extends TestCase
         $this->mockResponses([$this->mockJsonResponseBody($mockBody)], ['useCdn' => true, 'token' => null]);
 
         $this->assertEquals($expected, $this->client->getDocument('someDocId'));
-        $this->assertPreviousRequest(['url' => 'https://abc.apicdn.sanity.io/v1/data/doc/production/someDocId']);
+        $this->assertPreviousRequest(['url' => 'https://abc.apicdn.sanity.io/v2019-01-01/data/doc/production/someDocId']);
     }
 
     public function testIncludesUserAgent()
@@ -120,7 +190,7 @@ class ClientTest extends TestCase
         $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
 
         $this->assertEquals($expected, $this->client->getDocument('someDocId'));
-        $this->assertPreviousRequest(['url' => 'https://abc.api.sanity.io/v1/data/doc/production/someDocId']);
+        $this->assertPreviousRequest(['url' => 'https://abc.api.sanity.io/v2019-01-01/data/doc/production/someDocId']);
         $this->assertPreviousRequest(['headers' => ['User-Agent' => 'sanity-php ' . Version::VERSION]]);
     }
 
@@ -144,7 +214,7 @@ class ClientTest extends TestCase
 
         $this->assertEquals($expected, $this->client->fetch($query));
         $this->assertPreviousRequest([
-            'url' => 'https://abc.api.sanity.io/v1/data/query/production?query=%2A%5Bseats%20%3E%3D%202%5D',
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/data/query/production?query=%2A%5Bseats%20%3E%3D%202%5D',
             'headers' => ['Authorization' => 'Bearer muchsecure'],
         ]);
     }
@@ -158,7 +228,7 @@ class ClientTest extends TestCase
         $query = '*[seats >= $minSeats]';
         $params = ['minSeats' => 2];
 
-        $expectedUrl = 'https://abc.api.sanity.io/v1/data/query/production?';
+        $expectedUrl = 'https://abc.api.sanity.io/v2019-01-01/data/query/production?';
         $expectedUrl .= 'query=%2A%5Bseats%20%3E%3D%20%24minSeats%5D&%24minSeats=2';
 
         $this->assertEquals($expected, $this->client->fetch($query, $params));
@@ -177,7 +247,7 @@ class ClientTest extends TestCase
 
         $this->assertEquals($mockBody, $this->client->fetch($query, null, ['filterResponse' => false]));
         $this->assertPreviousRequest([
-            'url' => 'https://abc.api.sanity.io/v1/data/query/production?query=%2A%5Bseats%20%3E%3D%202%5D',
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/data/query/production?query=%2A%5Bseats%20%3E%3D%202%5D',
             'headers' => ['Authorization' => 'Bearer muchsecure'],
         ]);
     }
@@ -191,7 +261,7 @@ class ClientTest extends TestCase
 
         $this->assertEquals($expected, $this->client->fetch($query));
         $this->assertPreviousRequest([
-            'url' => 'https://abc.apicdn.sanity.io/v1/data/query/production?query=%2A%5Bseats%20%3E%3D%202%5D'
+            'url' => 'https://abc.apicdn.sanity.io/v2019-01-01/data/query/production?query=%2A%5Bseats%20%3E%3D%202%5D'
         ]);
     }
 
@@ -218,7 +288,7 @@ class ClientTest extends TestCase
 
         $this->assertEquals($result, $this->client->create($document));
         $this->assertPreviousRequest([
-            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/data/mutate/production?returnIds=true&returnDocuments=true',
             'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => [['create' => $document]]])
         ]);
@@ -233,7 +303,7 @@ class ClientTest extends TestCase
 
         $this->assertEquals($result, $this->client->create($document));
         $this->assertPreviousRequest([
-            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/data/mutate/production?returnIds=true&returnDocuments=true',
             'requestBody' => json_encode(['mutations' => [['create' => $document]]])
         ]);
     }
@@ -265,7 +335,7 @@ class ClientTest extends TestCase
         ]));
 
         $this->assertPreviousRequest([
-            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/data/mutate/production?returnIds=true&returnDocuments=true',
             'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => $mutations])
         ]);
@@ -281,7 +351,7 @@ class ClientTest extends TestCase
         $this->client->mutate($patch);
 
         $this->assertPreviousRequest([
-            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/data/mutate/production?returnIds=true&returnDocuments=true',
             'requestBody' => json_encode(['mutations' => [['patch' => $patch->serialize()]]])
         ]);
     }
@@ -296,7 +366,7 @@ class ClientTest extends TestCase
         $this->client->mutate($transaction);
 
         $this->assertPreviousRequest([
-            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/data/mutate/production?returnIds=true&returnDocuments=true',
             'requestBody' => json_encode(['mutations' => $transaction->serialize()])
         ]);
     }
@@ -310,7 +380,7 @@ class ClientTest extends TestCase
 
         $this->assertEquals($result, $this->client->create($document, ['visibility' => 'async']));
         $this->assertPreviousRequest([
-            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true&visibility=async',
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/data/mutate/production?returnIds=true&returnDocuments=true&visibility=async',
             'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => [['create' => $document]]])
         ]);
@@ -324,7 +394,7 @@ class ClientTest extends TestCase
 
         $this->assertEquals($document, $this->client->createIfNotExists($document));
         $this->assertPreviousRequest([
-            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/data/mutate/production?returnIds=true&returnDocuments=true',
             'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => [['createIfNotExists' => $document]]])
         ]);
@@ -348,7 +418,7 @@ class ClientTest extends TestCase
 
         $this->assertEquals($document, $this->client->createOrReplace($document));
         $this->assertPreviousRequest([
-            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/data/mutate/production?returnIds=true&returnDocuments=true',
             'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => [['createOrReplace' => $document]]])
         ]);
@@ -366,13 +436,21 @@ class ClientTest extends TestCase
 
     public function testCanGeneratePatch()
     {
-        $this->client = new Client(['projectId' => 'abc', 'dataset' => 'production']);
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+            'apiVersion' => '2019-01-01',
+        ]);
         $this->assertInstanceOf(Patch::class, $this->client->patch('someDocId'));
     }
 
     public function testCanGeneratePatchWithInitialOperations()
     {
-        $this->client = new Client(['projectId' => 'abc', 'dataset' => 'production']);
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+            'apiVersion' => '2019-01-01',
+        ]);
         $serialized = $this->client->patch('someDocId', ['inc' => ['seats' => 1]])->serialize();
         $this->assertEquals(['id' => 'someDocId', 'inc' => ['seats' => 1]], $serialized);
     }
@@ -389,7 +467,7 @@ class ClientTest extends TestCase
 
         $this->assertEquals($document, $newDoc);
         $this->assertPreviousRequest([
-            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/data/mutate/production?returnIds=true&returnDocuments=true',
             'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => [['patch' => [
                 'id' => 'someDocId',
@@ -401,13 +479,21 @@ class ClientTest extends TestCase
 
     public function testCanGenerateTransaction()
     {
-        $this->client = new Client(['projectId' => 'abc', 'dataset' => 'production']);
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+            'apiVersion' => '2019-01-01',
+        ]);
         $this->assertInstanceOf(Transaction::class, $this->client->transaction());
     }
 
     public function testCanGenerateTransactionWithInitialOperations()
     {
-        $this->client = new Client(['projectId' => 'abc', 'dataset' => 'production']);
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+            'apiVersion' => '2019-01-01',
+        ]);
         $serialized = $this->client->transaction([['create' => ['_type' => 'bike']]])->serialize();
         $this->assertEquals([['create' => ['_type' => 'bike']]], $serialized);
     }
@@ -423,7 +509,7 @@ class ClientTest extends TestCase
         $expected = $mockBody + ['documentIds' => ['someNewDocId']];
         $this->assertEquals($expected, $result);
         $this->assertPreviousRequest([
-            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true',
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/data/mutate/production?returnIds=true',
             'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => [['create' => [
                 '_type' => 'bike'
@@ -451,7 +537,7 @@ class ClientTest extends TestCase
         $expected = ['123' => $results[0]['document'], '456' => $results[1]['document']];
         $this->assertEquals($expected, $result);
         $this->assertPreviousRequest([
-            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true&returnDocuments=true',
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/data/mutate/production?returnIds=true&returnDocuments=true',
             'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => $mutations])
         ]);
@@ -465,7 +551,7 @@ class ClientTest extends TestCase
         $expected = $mockBody + ['documentIds' => ['foobar']];
         $this->assertEquals($expected, $this->client->delete('foobar'));
         $this->assertPreviousRequest([
-            'url' => 'https://abc.api.sanity.io/v1/data/mutate/production?returnIds=true',
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/data/mutate/production?returnIds=true',
             'headers' => ['Authorization' => 'Bearer muchsecure'],
             'requestBody' => json_encode(['mutations' => [['delete' => ['id' => 'foobar']]]])
         ]);
@@ -570,6 +656,7 @@ class ClientTest extends TestCase
             'projectId' => 'abc',
             'dataset' => 'production',
             'token' => 'muchsecure',
+            'apiVersion' => '2019-01-01',
             'handler' => $stack,
         ], $clientOptions));
     }
@@ -599,5 +686,29 @@ class ClientTest extends TestCase
     private function assertPreviousRequest($expected)
     {
         $this->assertRequest($expected, $this->history[0]);
+    }
+
+    private function assertErrorTriggered($errstr, $errno)
+    {
+        foreach ($this->errors as $error) {
+            if ($error['errstr'] === $errstr && $error['errno'] === $errno) {
+                return;
+            }
+        }
+
+        $numErrors = count($this->errors);
+        $singleError = count($this->errors) > 0 ? $this->errors[0] : false;
+        $errorMessage = 'Error with level ' . $errno . ' and message "' . $errstr . '" not triggered. ';
+        if ($numErrors === 0) {
+            $errorMessage .= 'No errors triggered.';
+        } else if ($numErrors === 1) {
+            $err = $this->errors[0];
+            $errorMessage .= 'Error triggered: "' . $err['errstr'] . '" (level ' . $err['errno'] . ')';
+        } else {
+            $errorMessage .= $numErrors . ' errors triggered that did not match expectation';
+        }
+
+
+        $this->fail($errorMessage);
     }
 }

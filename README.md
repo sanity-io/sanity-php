@@ -32,7 +32,11 @@ use Sanity\Client as SanityClient;
 $client = new SanityClient([
   'projectId' => 'your-project-id',
   'dataset' => 'your-dataset-name',
-  'useCdn' => true, // Whether or not to use the API CDN. Default is false.
+  // Whether or not to use the API CDN for queries. Default is false.
+  'useCdn' => true,
+  // If you are starting a new project, using the current UTC date is usually
+  // a good idea. See "Specifying API version" section for more details
+  'apiVersion' => '2019-01-29',
 ]);
 ```
 
@@ -43,11 +47,22 @@ $client = new SanityClient([
   'projectId' => 'your-project-id',
   'dataset' => 'your-dataset-name',
   'useCdn' => false,
+  'apiVersion' => '2019-01-29',
   // Note that you cannot combine a token with the `useCdn` option set to true,
   // as authenticated requests cannot be cached
   'token' => 'sanity-auth-token',
 ]);
 ```
+
+### Specifying API version
+
+Sanity uses ISO dates (YYYY-MM-DD) for versioning. The rationale and explanation for this can be found [in the documentation](http://sanity.io/help/api-versioning)
+
+In general, unless you know what API version you want to use, you'll want to set it to todays UTC date. This is to prevent any timezone confusion and to lock the API to prevent breaking changes.
+
+**Note**: Do not be tempted to use a dynamic value for the `apiVersion`. The whole reason for setting a static value is to prevent unexpected, breaking changes.
+
+In future versions, specifying an API version will be required. For now, to maintain backwards compatiblity, not specifying a version will trigger a deprecation warning and fall back to using `v1`.
 
 ### Fetch a single document by ID
 
