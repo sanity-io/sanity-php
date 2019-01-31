@@ -2,6 +2,9 @@
 namespace Sanity;
 
 use Exception;
+use DateInterval;
+use DateTimeImmutable;
+use DateTimeZone;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
@@ -16,9 +19,27 @@ class Client
 {
     use DocumentPropertyAsserter;
 
+    const NO_API_VERSION_WARNING =
+        'Using the Sanity client without specifying an API version is deprecated.' .
+        'See https://github.com/sanity-io/sanity-php#specifying-api-version';
+
+    const TOMORROW_API_VERSION_WARNING =
+        'You have set an API version that is in the future! - ' .
+        'according to your system clock, today is %s in Coordinated Universal Time. ' .
+        'You specified %s, which is "tomorrow". This will give unpredictable results, ' .
+        'as the meaning of that API version has not yet been declared. Unless you are ' .
+        'specifically using it to get a very newly released fix, you probably want to ' .
+        'use %s instead.';
+
+    const FUTURE_API_VERSION_ERROR =
+        'You have set an API version that is in the future! - ' .
+        'according to your system clock, today is %s in Coordinated Universal Time. ' .
+        'You specified %s, which could introduce breaking changes given the date is ' .
+        'in the future. You probably want to use todays UTC date instead (%s).';
+
     private $defaultConfig = [
         'apiHost' => 'https://api.sanity.io',
-        'apiVersion' => 'v1',
+        'apiVersion' => '1',
         'useProjectHostname' => true,
         'timeout' => 30,
         'handler' => null,
@@ -173,7 +194,7 @@ class Client
         }
 
         $body = ['mutations' => !isset($mut[0]) ? [$mut] : $mut];
-        $queryParams = $this->getMutationQuery($options);
+        $queryParams = $this->getMutationQueryParams($options);
         $requestOptions = [
             'method' => 'POST',
             'query' => $queryParams,
@@ -335,12 +356,45 @@ class Client
      */
     private function initConfig($config)
     {
-        $newConfig = array_replace_recursive($this->defaultConfig, $this->clientConfig, $config);
-        $apiVersion = $newConfig['apiVersion'];
+        $specifiedConfig = array_replace_recursive($this->clientConfig, $config);
+        if (!isset($specifiedConfig['apiVersion'])) {
+            trigger_error(Client::NO_API_VERSION_WARNING, E_USER_DEPRECATED);
+        }
+
+        $newConfig = array_replace_recursive($this->defaultConfig, $specifiedConfig);
+        $apiVersion = str_replace('#^v#', '', $newConfig['apiVersion']);
         $projectBased = $newConfig['useProjectHostname'];
         $useCdn = isset($newConfig['useCdn']) ? $newConfig['useCdn'] : false;
         $projectId = isset($newConfig['projectId']) ? $newConfig['projectId'] : null;
         $dataset = isset($newConfig['dataset']) ? $newConfig['dataset'] : null;
+
+        if (preg_match('#^\d{4}-\d{2}-\d{2}$#', $apiVersion)) {
+            $apiDate = new DateTimeImmutable($apiVersion, new DateTimeZone('UTC'));
+            $currentDate = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+            $currentDate = $currentDate->setTime(0, 0, 0, 0);
+            $tomorrow = $currentDate->add(new DateInterval('P01D'));
+
+            if ($apiVersion === $tomorrow->format('Y-m-d')) {
+                // The date specified is actually "tomorrow" in UTC terms, which is _allowed_,
+                // but might suddenly change behavior. Warn that the user probably wants to use
+                // todays UTC date, unless she means to use a hotfix (just released) version
+                trigger_error(sprintf(
+                    self::TOMORROW_API_VERSION_WARNING,
+                    $currentDate->format('Y-m-d'),
+                    $apiVersion,
+                    $currentDate->format('Y-m-d')
+                ), E_USER_WARNING);
+            } elseif ($apiDate > $tomorrow) {
+                // The date specified is in the future, which the API will reject. Since you will
+                // not be able to use the API for anything, throwing is the only logical choice
+                throw new ConfigException(sprintf(
+                    self::FUTURE_API_VERSION_ERROR,
+                    $currentDate->format('Y-m-d'),
+                    $apiVersion,
+                    $currentDate->format('Y-m-d')
+                ));
+            }
+        }
 
         if ($projectBased && !$projectId) {
             throw new ConfigException('Configuration must contain `projectId`');
@@ -361,9 +415,9 @@ class Client
         $host = $hostParts[1];
 
         if ($projectBased) {
-            $newConfig['url'] = $protocol . '://' . $projectId . '.' . $host . '/' . $apiVersion;
+            $newConfig['url'] = $protocol . '://' . $projectId . '.' . $host . '/v' . $apiVersion;
         } else {
-            $newConfig['url'] = $newConfig['apiHost'] . $apiVersion;
+            $newConfig['url'] = $newConfig['apiHost'] . '/v' . $apiVersion;
         }
 
         $newConfig['useCdn'] = $useCdn;
@@ -377,7 +431,7 @@ class Client
      * @param array $options Array of request options
      * @return array Array of normalized query params
      */
-    private function getMutationQuery($options = [])
+    private function getMutationQueryParams($options = [])
     {
         $query = ['returnIds' => 'true'];
 
