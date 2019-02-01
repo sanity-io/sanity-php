@@ -60,7 +60,7 @@ class ClientTest extends TestCase
     public function testWarnsOnTomorrowUtcDateApiVersion()
     {
         $currentDate = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        $currentDate = $currentDate->setTime(0, 0, 0, 0);
+        $currentDate = $currentDate->setTime(0, 0, 0);
         $tomorrow = $currentDate->add(new DateInterval('P01D'));
 
         $this->client = new Client([
