@@ -371,7 +371,7 @@ class Client
         if (preg_match('#^\d{4}-\d{2}-\d{2}$#', $apiVersion)) {
             $apiDate = new DateTimeImmutable($apiVersion, new DateTimeZone('UTC'));
             $currentDate = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-            $currentDate = $currentDate->setTime(0, 0, 0, 0);
+            $currentDate = $currentDate->setTime(0, 0, 0);
             $tomorrow = $currentDate->add(new DateInterval('P01D'));
 
             if ($apiVersion === $tomorrow->format('Y-m-d')) {
