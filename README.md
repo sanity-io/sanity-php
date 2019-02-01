@@ -56,9 +56,9 @@ $client = new SanityClient([
 
 ### Specifying API version
 
-Sanity uses ISO dates (YYYY-MM-DD) for versioning. The rationale and explanation for this can be found [in the documentation](http://sanity.io/help/api-versioning)
+Sanity uses ISO dates (YYYY-MM-DD) in UTC timezone for versioning. The explanation for this can be found [in the documentation](http://sanity.io/help/api-versioning)
 
-In general, unless you know what API version you want to use, you'll want to set it to todays UTC date. This is to prevent any timezone confusion and to lock the API to prevent breaking changes.
+In general, unless you know what API version you want to use, you'll want to set it to todays UTC date. By doing this, you'll get all the latest bugfixes and features, while  preventing any timezone confusion and locking the API to prevent breaking changes.
 
 **Note**: Do not be tempted to use a dynamic value for the `apiVersion`. The whole reason for setting a static value is to prevent unexpected, breaking changes.
 
