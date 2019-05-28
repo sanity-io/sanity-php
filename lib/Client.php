@@ -4,7 +4,6 @@ namespace Sanity;
 use Exception;
 use DateInterval;
 use DateTimeImmutable;
-use DateTimeZone;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
@@ -290,6 +289,11 @@ class Client
             }
         }
 
+        $warnings = $response->getHeader('X-Sanity-Warning');
+        foreach ($warnings as $warning) {
+            trigger_error($warning, E_USER_WARNING);
+        }
+
         $contentType = $response->getHeader('Content-Type')[0];
         $isJson = stripos($contentType, 'application/json') !== false;
         $rawBody = (string) $response->getBody();
@@ -368,32 +372,15 @@ class Client
         $projectId = isset($newConfig['projectId']) ? $newConfig['projectId'] : null;
         $dataset = isset($newConfig['dataset']) ? $newConfig['dataset'] : null;
 
-        if (preg_match('#^\d{4}-\d{2}-\d{2}$#', $apiVersion)) {
-            $apiDate = new DateTimeImmutable($apiVersion, new DateTimeZone('UTC'));
-            $currentDate = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-            $currentDate = $currentDate->setTime(0, 0, 0);
-            $tomorrow = $currentDate->add(new DateInterval('P01D'));
-
-            if ($apiVersion === $tomorrow->format('Y-m-d')) {
-                // The date specified is actually "tomorrow" in UTC terms, which is _allowed_,
-                // but might suddenly change behavior. Warn that the user probably wants to use
-                // todays UTC date, unless she means to use a hotfix (just released) version
-                trigger_error(sprintf(
-                    self::TOMORROW_API_VERSION_WARNING,
-                    $currentDate->format('Y-m-d'),
-                    $apiVersion,
-                    $currentDate->format('Y-m-d')
-                ), E_USER_WARNING);
-            } elseif ($apiDate > $tomorrow) {
-                // The date specified is in the future, which the API will reject. Since you will
-                // not be able to use the API for anything, throwing is the only logical choice
-                throw new ConfigException(sprintf(
-                    self::FUTURE_API_VERSION_ERROR,
-                    $currentDate->format('Y-m-d'),
-                    $apiVersion,
-                    $currentDate->format('Y-m-d')
-                ));
+        $apiIsDate = preg_match('#^\d{4}-\d{2}-\d{2}$#', $apiVersion);
+        if ($apiIsDate) {
+            try {
+                new DateTimeImmutable($apiVersion);
+            } catch (Exception $err) {
+                throw new ConfigException('Invalid ISO-date "' . $apiVersion . '"');
             }
+        } elseif ($apiVersion !== 'X' && $apiVersion !== '1') {
+            throw new ConfigException('Invalid API version, must be either a date in YYYY-MM-DD format, `1` or `X`');
         }
 
         if ($projectBased && !$projectId) {

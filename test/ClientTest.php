@@ -2,8 +2,6 @@
 namespace SanityTest;
 
 use DateInterval;
-use DateTimeZone;
-use DateTimeImmutable;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Handler\MockHandler;
@@ -57,39 +55,61 @@ class ClientTest extends TestCase
         $this->assertErrorTriggered(Client::NO_API_VERSION_WARNING, E_USER_DEPRECATED);
     }
 
-    public function testWarnsOnTomorrowUtcDateApiVersion()
+    public function testWarnsOnServerWarnings()
     {
-        $currentDate = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        $currentDate = $currentDate->setTime(0, 0, 0);
-        $tomorrow = $currentDate->add(new DateInterval('P01D'));
-
         $this->client = new Client([
             'projectId' => 'abc',
             'dataset' => 'production',
-            'apiVersion' => $tomorrow->format('Y-m-d'),
+            'apiVersion' => '1',
         ]);
+
         $this->assertInstanceOf(Client::class, $this->client);
-        $this->assertErrorTriggered(sprintf(
-            Client::TOMORROW_API_VERSION_WARNING,
-            $currentDate->format('Y-m-d'),
-            $tomorrow->format('Y-m-d'),
-            $currentDate->format('Y-m-d')
-        ), E_USER_WARNING);
+        $this->mockResponses([$this->mockJsonResponseBody(['result' => []], 200, ['X-Sanity-Warning' => 'Some error'])]);
+        $this->client->request(['url' => '/projects']);
+        $this->assertErrorTriggered('Some error', E_USER_WARNING);
     }
 
     /**
      * @expectedException Sanity\Exception\ConfigException
-     * @expectedExceptionMessage could introduce breaking changes
+     * @expectedExceptionMessage Invalid ISO-date
      */
-    public function testThrowsOnFutureUtcDateApiVersion()
+    public function testThrowsOnInvalidDate()
     {
-        $currentDate = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        $futureDate = $currentDate->add(new DateInterval('P03D'));
-
         $this->client = new Client([
             'projectId' => 'abc',
             'dataset' => 'production',
-            'apiVersion' => $futureDate->format('Y-m-d'),
+            'apiVersion' => '2018-14-03',
+        ]);
+    }
+
+    /**
+     * @expectedException Sanity\Exception\ConfigException
+     * @expectedExceptionMessage Invalid API version
+     */
+    public function testThrowsOnInvalidApiVersion()
+    {
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+            'apiVersion' => '3',
+        ]);
+    }
+
+    public function testDoesNotThrowOnExperimentalApiVersion()
+    {
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+            'apiVersion' => 'X',
+        ]);
+    }
+
+    public function testDoesNotThrowOnApiVersionOne()
+    {
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+            'apiVersion' => '1',
         ]);
     }
 
@@ -661,9 +681,9 @@ class ClientTest extends TestCase
         ], $clientOptions));
     }
 
-    private function mockJsonResponseBody($body, $statusCode = 200)
+    private function mockJsonResponseBody($body, $statusCode = 200, $headers = [])
     {
-        return new Response($statusCode, ['Content-Type' => 'application/json'], json_encode($body));
+        return new Response($statusCode, array_merge(['Content-Type' => 'application/json'], $headers), json_encode($body));
     }
 
     private function assertRequest($expected, $request)
