@@ -22,20 +22,6 @@ class Client
         'Using the Sanity client without specifying an API version is deprecated.' .
         'See https://github.com/sanity-io/sanity-php#specifying-api-version';
 
-    const TOMORROW_API_VERSION_WARNING =
-        'You have set an API version that is in the future! - ' .
-        'according to your system clock, today is %s in Coordinated Universal Time. ' .
-        'You specified %s, which is "tomorrow". This will give unpredictable results, ' .
-        'as the meaning of that API version has not yet been declared. Unless you are ' .
-        'specifically using it to get a very newly released fix, you probably want to ' .
-        'use %s instead.';
-
-    const FUTURE_API_VERSION_ERROR =
-        'You have set an API version that is in the future! - ' .
-        'according to your system clock, today is %s in Coordinated Universal Time. ' .
-        'You specified %s, which could introduce breaking changes given the date is ' .
-        'in the future. You probably want to use todays UTC date instead (%s).';
-
     private $defaultConfig = [
         'apiHost' => 'https://api.sanity.io',
         'apiVersion' => '1',
