@@ -258,6 +258,20 @@ class ClientTest extends TestCase
         ]);
     }
 
+    public function testCanQueryForDocumentsThroughAlias()
+    {
+        $query = '*[seats >= 2]';
+        $expected = [['_id' => 'someDocId', '_type' => 'bike', 'name' => 'Tandem Extraordinaire', 'seats' => 2]];
+        $mockBody = ['result' => $expected];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)], ['dataset' => '~current']);
+
+        $this->assertEquals($expected, $this->client->fetch($query));
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/data/query/~current?query=%2A%5Bseats%20%3E%3D%202%5D',
+            'headers' => ['Authorization' => 'Bearer muchsecure'],
+        ]);
+    }
+
     public function testCanQueryForDocumentsWithoutFilteringResponse()
     {
         $query = '*[seats >= 2]';
