@@ -1,5 +1,7 @@
 # sanity-php
 
+[![Packagist](https://img.shields.io/packagist/v/sanity/sanity-php.svg?style=flat-square)](https://packagist.org/packages/sanity/sanity-php)[![Build Status](https://img.shields.io/github/workflow/status/sanity-io/sanity-php/CI%20workflow/master?style=flat-square)](https://github.com/sanity-io/sanity-php/actions?query=workflow%3A%22CI+workflow%22)
+
 PHP library for the [Sanity API](https://sanity.io/)
 
 ## Requirements
