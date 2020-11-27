@@ -40,8 +40,7 @@ jobs:
             ${{ runner.os }}-composer-
 
       - name: Install dependencies
-        run: | 
-          rm composer.lock
+        run: |
           composer install --prefer-dist
 
       - name: Run tests
