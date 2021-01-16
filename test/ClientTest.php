@@ -671,6 +671,244 @@ class ClientTest extends TestCase
     }
 
     /**
+     * Asset tests
+     */
+    public function testUploadAssetFromStringDefaultMime()
+    {
+        $buffer = file_get_contents(__DIR__ . '/fixtures/favicon.png');
+        $document = ['_id' => 'image-2638c439689de9ea323ecb8aed6831541fd85cdc-57x57-png', '_type' => 'sanity.imageAsset', 'extension' => 'png'];
+        $mockBody = ['document' => $document];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+        $asset = $this->client->uploadAssetFromString('image', $buffer);
+
+        $this->assertEquals($document['_id'], $asset['_id']);
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/assets/images/production',
+            'headers' => ['Content-Type' => 'application/octet-stream', 'Content-Length' => 1876],
+            'requestBody' => $buffer
+        ]);
+    }
+
+    public function testUploadAssetFromStringSpecifyMime()
+    {
+        $buffer = file_get_contents(__DIR__ . '/fixtures/favicon.png');
+        $document = ['_id' => 'image-2638c439689de9ea323ecb8aed6831541fd85cdc-57x57-png', '_type' => 'sanity.imageAsset', 'extension' => 'png'];
+        $mockBody = ['document' => $document];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+        $asset = $this->client->uploadAssetFromString('image', $buffer, ['contentType' => 'application/octet-stream']);
+
+        $this->assertEquals($document['_id'], $asset['_id']);
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/assets/images/production',
+            'headers' => ['Content-Type' => 'application/octet-stream', 'Content-Length' => 1876],
+            'requestBody' => $buffer
+        ]);
+    }
+
+    public function testUploadAssetFromStringSpecifyFilename()
+    {
+        $buffer = file_get_contents(__DIR__ . '/fixtures/favicon.png');
+        $document = ['_id' => 'image-2638c439689de9ea323ecb8aed6831541fd85cdc-57x57-png', '_type' => 'sanity.imageAsset', 'extension' => 'png'];
+        $mockBody = ['document' => $document];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+        $asset = $this->client->uploadAssetFromString('image', $buffer, ['filename' => 'my-favicon.png']);
+
+        $this->assertEquals($document['_id'], $asset['_id']);
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/assets/images/production?filename=my-favicon.png',
+            'requestBody' => $buffer
+        ]);
+    }
+
+    public function testUploadAssetFromStringSpecifyMetaExtration()
+    {
+        $buffer = file_get_contents(__DIR__ . '/fixtures/favicon.png');
+        $document = ['_id' => 'image-2638c439689de9ea323ecb8aed6831541fd85cdc-57x57-png', '_type' => 'sanity.imageAsset', 'extension' => 'png'];
+        $mockBody = ['document' => $document];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+        $asset = $this->client->uploadAssetFromString('image', $buffer, ['extract' => ['exif', 'location']]);
+
+        $this->assertEquals($document['_id'], $asset['_id']);
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/assets/images/production?meta%5B0%5D=exif&meta%5B1%5D=location',
+            'requestBody' => $buffer
+        ]);
+    }
+
+    public function testUploadAssetFromStringSpecifyNoMetaExtraction()
+    {
+        $buffer = file_get_contents(__DIR__ . '/fixtures/favicon.png');
+        $document = ['_id' => 'image-2638c439689de9ea323ecb8aed6831541fd85cdc-57x57-png', '_type' => 'sanity.imageAsset', 'extension' => 'png'];
+        $mockBody = ['document' => $document];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+        $asset = $this->client->uploadAssetFromString('image', $buffer, ['extract' => []]);
+
+        $this->assertEquals($document['_id'], $asset['_id']);
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/assets/images/production?meta%5B0%5D=none',
+            'requestBody' => $buffer
+        ]);
+    }
+
+    public function testUploadAssetFromStringSpecifyAllStringMeta()
+    {
+        $buffer = file_get_contents(__DIR__ . '/fixtures/favicon.png');
+        $document = ['_id' => 'image-2638c439689de9ea323ecb8aed6831541fd85cdc-57x57-png', '_type' => 'sanity.imageAsset', 'extension' => 'png'];
+        $mockBody = ['document' => $document];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+        $asset = $this->client->uploadAssetFromString('image', $buffer, ['filename' => 'my-favicon.png', 'label' => 'wat-label', 'title' => 'Sanity Favicon', 'description' => 'Favicon used for shortcuts and such', 'creditLine' => '(c) Sanity.io']);
+
+        $this->assertEquals($document['_id'], $asset['_id']);
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/assets/images/production?label=wat-label&title=Sanity%20Favicon&description=Favicon%20used%20for%20shortcuts%20and%20such&creditLine=%28c%29%20Sanity.io&filename=my-favicon.png',
+            'requestBody' => $buffer
+        ]);
+    }
+
+    public function testUploadAssetFromStringSpecifySource()
+    {
+        $buffer = file_get_contents(__DIR__ . '/fixtures/favicon.png');
+        $document = ['_id' => 'image-2638c439689de9ea323ecb8aed6831541fd85cdc-57x57-png', '_type' => 'sanity.imageAsset', 'extension' => 'png'];
+        $mockBody = ['document' => $document];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+        $asset = $this->client->uploadAssetFromString('image', $buffer, ['filename' => 'my-favicon.png', 'source' => ['id' => 'abc123', 'url' => 'https://my.source/img.png', 'name' => 'The Web']]);
+
+        $this->assertEquals($document['_id'], $asset['_id']);
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/assets/images/production?filename=my-favicon.png&sourceId=abc123&sourceName=The%20Web&sourceUrl=https%3A%2F%2Fmy.source%2Fimg.png',
+            'requestBody' => $buffer
+        ]);
+    }
+
+    public function testUploadAssetFromStringWithFile()
+    {
+        $buffer = file_get_contents(__DIR__ . '/fixtures/document.json');
+        $document = ['_id' => 'file-a89dac4c7845079cf854b7478101daf7a058bd82-json', '_type' => 'sanity.fileAsset', 'extension' => 'json'];
+        $mockBody = ['document' => $document];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+        $asset = $this->client->uploadAssetFromString('file', $buffer);
+
+        $this->assertEquals($document['_id'], $asset['_id']);
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/assets/files/production',
+            'headers' => ['Content-Type' => 'application/octet-stream', 'Content-Length' => 1336],
+            'requestBody' => $buffer
+        ]);
+    }
+
+    public function testUploadAssetFromStringWithJsonFile()
+    {
+        $buffer = file_get_contents(__DIR__ . '/fixtures/document.json');
+        $document = ['_id' => 'file-a89dac4c7845079cf854b7478101daf7a058bd82-json', '_type' => 'sanity.fileAsset', 'extension' => 'json'];
+        $mockBody = ['document' => $document];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+        $asset = $this->client->uploadAssetFromString('file', $buffer);
+
+        $this->assertEquals($document['_id'], $asset['_id']);
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/assets/files/production',
+            'requestBody' => $buffer
+        ]);
+    }
+
+    public function testUploadAssetFromFilePreservesFilename()
+    {
+        $document = ['_id' => 'image-2638c439689de9ea323ecb8aed6831541fd85cdc-57x57-png', '_type' => 'sanity.imageAsset', 'extension' => 'png'];
+        $mockBody = ['document' => $document];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+        $asset = $this->client->uploadAssetFromFile('image', __DIR__ . '/fixtures/favicon.png');
+
+        $this->assertEquals($document['_id'], $asset['_id']);
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/assets/images/production?filename=favicon.png',
+            'headers' => ['Content-Length' => 1876],
+            'requestBody' => $buffer
+        ]);
+    }
+
+    public function testUploadAssetFromFileCanDropFilename()
+    {
+        $document = ['_id' => 'image-2638c439689de9ea323ecb8aed6831541fd85cdc-57x57-png', '_type' => 'sanity.imageAsset', 'extension' => 'png'];
+        $mockBody = ['document' => $document];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+        $asset = $this->client->uploadAssetFromFile('image', __DIR__ . '/fixtures/favicon.png', ['preserveFilename' => false]);
+
+        $this->assertEquals($document['_id'], $asset['_id']);
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/assets/images/production',
+            'headers' => ['Content-Length' => 1876],
+            'requestBody' => $buffer
+        ]);
+    }
+
+    public function testUploadAssetFromNonImageFile()
+    {
+        $buffer = file_get_contents(__DIR__ . '/fixtures/document.json');
+        $document = ['_id' => 'file-a89dac4c7845079cf854b7478101daf7a058bd82-json', '_type' => 'sanity.fileAsset', 'extension' => 'json'];
+        $mockBody = ['document' => $document];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
+        $asset = $this->client->uploadAssetFromFile('file', __DIR__ . '/fixtures/document.json');
+
+        $this->assertEquals($document['_id'], $asset['_id']);
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/assets/files/production?filename=document.json',
+            'headers' => ['Content-Length' => 1336],
+            'requestBody' => $buffer
+        ]);
+    }
+
+    /**
+     * @expectedException Sanity\Exception\InvalidArgumentException
+     * @expectedExceptionMessage Invalid asset type
+     */
+    public function testUploadFromStringThrowsOnUnknownAssetType()
+    {
+        $this->mockResponses([]);
+        $this->client->uploadAssetFromString('nope', 'yep');
+    }
+
+    /**
+     * @expectedException Sanity\Exception\InvalidArgumentException
+     * @expectedExceptionMessage Invalid asset type
+     */
+    public function testUploadFromFileThrowsOnUnknownAssetType()
+    {
+        $this->mockResponses([]);
+        $this->client->uploadAssetFromFile('nope', 'yep');
+    }
+
+    /**
+     * @expectedException Sanity\Exception\InvalidArgumentException
+     * @expectedExceptionMessage File does not exist
+     * @expectedExceptionMessage nope.svg
+     */
+    public function testUploadFromFileThrowsOnMissingFile()
+    {
+        $this->mockResponses([]);
+        $this->client->uploadAssetFromFile('file', __DIR__ . '/fixtures/nope.svg');
+    }
+
+    /**
+     * @expectedException Sanity\Exception\InvalidArgumentException
+     * @expectedExceptionMessage zero length
+     */
+    public function testUploadFromFileThrowsOnEmptyFile()
+    {
+        $this->mockResponses([]);
+        $this->client->uploadAssetFromFile('file', __DIR__ . '/fixtures/empty.txt');
+    }
+
+    /**
+     * @expectedException Sanity\Exception\InvalidArgumentException
+     * @expectedExceptionMessage must be a string
+     */
+    public function testUploadAssetThrowsOnInvalidStringMeta()
+    {
+        $this->mockResponses([]);
+        $this->client->uploadAssetFromString('file', 'foobar', ['filename' => 123]);
+    }
+
+    /**
      * Helpers
      */
     private function mockResponses($mocks, $clientOptions = [])
