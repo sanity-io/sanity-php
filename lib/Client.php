@@ -30,6 +30,11 @@ class Client
         'handler' => null,
     ];
 
+    private $defaultAssetOptions = [
+        'preserveFilename' => true,
+        'timeout' => 0,
+    ];
+
     private $clientConfig = [];
     private $httpClient;
 
@@ -215,6 +220,117 @@ class Client
           'results' => $results,
           $key => $ids,
         ];
+    }
+
+    /**
+     * Upload an image or a file from a binary string to the configured dataset
+     *
+     * Options:
+     * [
+     *   preserveFilename (boolean) Whether or not to preserve the original filename (default: true)
+     *   filename         (string)  Filename for this file (optional, but encouraged)
+     *   timeout          (number)  Milliseconds to wait before timing the request out (default: 0)
+     *   contentType      (string)  Mime type of the file
+     *   extract          (array)   Array of metadata parts to extract from image.
+     *                              Possible values: `location`, `exif`, `image`, `palette`
+     *   label            (string)  Label (deprecated)
+     *   title            (string)  Title
+     *   description      (string)  Description
+     *   creditLine       (string)  The credit to person(s) and/or organization(s) required by the
+     *                              supplier of the image to be used when published
+     *   source           (array)   Source data (when the asset is from an external service)
+     *   source['id']     (string)  The (u)id of the asset within the source, i.e. 'i-f323r1E'.
+     *                              Required if source is defined.
+     *   source['name']   (string)  The name of the source, i.e. 'unsplash'. Required if source is defined.
+     *   source['url']    (string)  A url to where to find the asset, or get more info about it in the source. Optional.
+     * ]
+     *
+     * @param string $assetType Either "image" or "file". Images can be transformed with the image API after uploading.
+     * @param string $data A string containing the binary data of the image or file to upload
+     * @param array $options Optional assocative array of options for the request
+     * @return array Asset document
+     */
+    public function uploadAssetFromString($assetType, $data, $options = [])
+    {
+        $this->validateAssetType($assetType);
+
+        $assetEndpoint = $assetType === 'image' ? 'images' : 'files';
+        $queryParams = [];
+
+        $assetOptions = array_merge($this->defaultAssetOptions, $options);
+
+        // If an empty array is given, explicitly set `none` to override API defaults
+        if (isset($assetOptions['extract']) && is_array($assetOptions['extract'])) {
+            $queryParams['meta'] = empty($assetOptions['extract']) ? ['none'] : $assetOptions['extract'];
+        }
+
+        // Use passed mime type if specified, otherwise default to octet-stream
+        $mime = isset($assetOptions['contentType']) ? $assetOptions['contentType'] : 'application/octet-stream';
+
+        // Copy string metadata keys directly to query string if defined
+        $strMetaKeys = ['label', 'title', 'description', 'creditLine', 'filename'];
+        foreach ($strMetaKeys as $metaKey) {
+            if (empty($assetOptions[$metaKey])) {
+                continue;
+            }
+
+            if (!is_string($assetOptions[$metaKey])) {
+                throw new InvalidArgumentException('Asset "' . $metaKey . '" key must be a string if defined');
+            }
+
+            $queryParams[$metaKey] = $assetOptions[$metaKey];
+        }
+
+        // Validate and set source if defined
+        if (isset($assetOptions['source']) && is_array($assetOptions['source'])) {
+            $source = $assetOptions['source'];
+            if (isset($source['id'])) {
+                $queryParams['sourceId'] = $source['id'];
+            }
+
+            if (isset($source['name'])) {
+                $queryParams['sourceName'] = $source['name'];
+            }
+
+            if (isset($source['url'])) {
+                $queryParams['sourceUrl'] = $source['url'];
+            }
+        }
+
+        $requestOptions = [
+            'method' => 'POST',
+            'timeout' => $assetOptions['timeout'],
+            'url' => '/assets/' . $assetEndpoint . '/' . $this->clientConfig['dataset'],
+            'headers' => ['Content-Type' => $mime],
+            'query' => $queryParams,
+            'body' => $data,
+        ];
+
+        // Try to perform request
+        $body = $this->request($requestOptions);
+        return $body['document'];
+    }
+
+    /**
+     * Upload an image or a file from a given file path to the configured dataset.
+     * See `uploadAssetFromString` for explanation of available options.
+     *
+     * @param string $assetType Either "image" or "file". Images can be transformed with the image API after uploading.
+     * @param string $data A string containing the binary data of the image or file to upload
+     * @param array $options Optional assocative array of options for the request
+     * @return array Asset document
+     */
+    public function uploadAssetFromFile($assetType, $filePath, $options = [])
+    {
+        $this->validateAssetType($assetType);
+        $this->validateLocalFile($filePath);
+
+        $assetOptions = array_merge($this->defaultAssetOptions, $options);
+        if ($assetOptions['preserveFilename'] && !isset($assetOptions['filename'])) {
+            $assetOptions['filename'] = basename($filePath);
+        }
+
+        return $this->uploadAssetFromString($assetType, file_get_contents($filePath), $assetOptions);
     }
 
     /**
@@ -417,5 +533,35 @@ class Client
         }
 
         return $query;
+    }
+
+    /**
+     * Validate whether or not the given file path is valid, exists and is non-empty
+     *
+     * @param string $path File path to validate
+     */
+    private function validateLocalFile($path)
+    {
+        if (!is_file($path)) {
+            throw new InvalidArgumentException('File does not exist: ' . $path);
+        }
+
+        if (!filesize($path)) {
+            throw new InvalidArgumentException('File is of zero length: ' . $path);
+        }
+    }
+
+    /**
+     * Validate whether or not the given assert type is recognized
+     *
+     * @param string $assetType Asset type to validate
+     */
+    private function validateAssetType($assetType)
+    {
+        if ($assetType !== 'image' && $assetType !== 'file') {
+            throw new InvalidArgumentException(
+                'Invalid asset type "' . $assetType . '" - should be "image" or "file"'
+            );
+        }
     }
 }
