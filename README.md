@@ -1,6 +1,6 @@
 # sanity-php
 
-[![Packagist](https://img.shields.io/packagist/v/sanity/sanity-php.svg?style=flat-square)](https://packagist.org/packages/sanity/sanity-php)[![Build Status](https://img.shields.io/github/workflow/status/sanity-io/sanity-php/CI%20workflow/master?style=flat-square)](https://github.com/sanity-io/sanity-php/actions?query=workflow%3A%22CI+workflow%22)
+[![Packagist](https://img.shields.io/packagist/v/sanity/sanity-php.svg?style=flat-square)](https://packagist.org/packages/sanity/sanity-php)[![Build Status](https://img.shields.io/github/workflow/status/sanity-io/sanity-php/CI%20workflow/main?style=flat-square)](https://github.com/sanity-io/sanity-php/actions?query=workflow%3A%22CI+workflow%22)
 
 PHP library for the [Sanity API](https://sanity.io/)
 
@@ -202,6 +202,88 @@ $client->mutate($transaction);
 ```
 
 An important note on this approach is that you cannot call `commit()` on transactions or patches instantiated this way, instead you have to pass them to `client.mutate()`.
+
+### Upload an image asset (from local file)
+
+```php
+$asset = $client->uploadAssetFromFile('image', '/some/path/to/image.png');
+echo $asset['_id'];
+```
+
+### Upload an image asset (from a string)
+
+```php
+$image = file_get_contents('/some/path/to/image.png');
+$asset = $client->uploadAssetFromString('image', $buffer, [
+    // Will be set in the `originalFilename` property on the image asset
+    // The filename in the URL will still be a hash
+    'filename' => 'magnificent-bridge.png'
+]);
+echo $asset['_id'];
+```
+
+### Upload image, extract exif and palette data
+
+```php
+$asset = $client->uploadAssetFromFile('image', '/some/path/to/image.png', [
+    'extract' => ['exif', 'palette']
+]);
+
+var_dump($asset['metadata']);
+```
+
+### Upload a file asset (from local file)
+
+```php
+$asset = $client->uploadAssetFromFile('file', '/path/to/raspberry-pi-specs.pdf', [
+    // Including a mime type is not _required_ but strongly recommended
+    'contentType' => 'application/pdf'
+]);
+echo $asset['_id'];
+```
+
+### Upload a file asset (from a string)
+
+```php
+$image = file_get_contents('/path/to/app-release.apk');
+$asset = $client->uploadAssetFromString('file', $buffer, [
+    // Will be set in the `originalFilename` property on the image asset
+    // The filename in the URL will still be a hash
+    'filename' => 'dog-walker-pro-v1.4.33.apk',
+    // Including a mime type is not _required_ but strongly recommended
+    'contentType' => 'application/vnd.android.package-archive'
+]);
+echo $asset['_id'];
+```
+
+### Referencing an uploaded image/file
+
+```php
+// Create a new document with the referenced image in the "image" field:
+$asset = $client->uploadAssetFromFile('image', '/some/path/to/image.png');
+$document = $client->create([
+    '_type' => 'blogPost',
+    'image' => [
+        '_type' => 'image',
+        'asset' => ['_ref' => $asset['_id']]
+    ]
+]);
+echo $document['_id'];
+```
+
+```php
+// Patch existing document, setting the `heroImage` field
+$asset = $client->uploadAssetFromFile('image', '/some/path/to/image.png');
+$updatedBike = $client
+    ->patch('bike-123') // Document ID to patch
+    ->set([
+        'heroImage' => [
+            '_type' => 'image',
+            'asset' => ['_ref' => $asset['_id']]
+        ]
+    ])
+    ->commit();
+```
 
 ### Get client configuration
 
