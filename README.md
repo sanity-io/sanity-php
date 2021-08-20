@@ -285,6 +285,23 @@ $updatedBike = $client
     ->commit();
 ```
 
+### Upload image and append to array
+
+```php
+$asset = $client->uploadAssetFromFile('image', '/some/path/to/image.png');
+$updatedHotel = $client
+    ->patch('hotel-coconut-lounge') // Document ID to patch
+    ->setIfMissing(['roomPhotos' => []]) // Ensure we have an array to append to
+    ->append('roomPhotos', [
+        [
+            '_type' => 'image',
+            '_key' => bin2hex(random_bytes(5)),
+            'asset' => ['_ref' => $image['_id']]
+        ]
+    ])
+    ->commit();
+```
+
 ### Get client configuration
 
 ```php
