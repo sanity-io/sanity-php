@@ -188,7 +188,7 @@ class Client
         $requestOptions = [
             'method' => 'POST',
             'query' => $queryParams,
-            'headers' => ['Content-Type: application/json'],
+            'headers' => ['Content-Type' => 'application/json'],
             'body' => json_encode($body),
             'url' => '/data/mutate/' . $this->clientConfig['dataset'],
         ];
