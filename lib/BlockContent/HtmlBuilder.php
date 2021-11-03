@@ -117,7 +117,11 @@ class HtmlBuilder
                 ],
                 'link' => [
                     'head' => function ($mark) {
-                        return '<a href="' . $mark['href'] . '">';
+                        if (array_key_exists('href', $mark)) {
+                            return '<a href="' . $mark['href'] . '">';
+                        } else {
+                            return '<a href="">';
+                        }
                     },
                     'tail' => '</a>'
                 ]
