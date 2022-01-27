@@ -8,7 +8,7 @@
 >
   <coverage>
     <include>
-      <directory>lib</directory>
+      <directory>src</directory>
     </include>
     <report>
       <clover outputFile="build/coverage/clover.xml"/>
@@ -17,7 +17,7 @@
   </coverage>
   <testsuites>
     <testsuite name="Sanity PHP Test Suite">
-      <directory suffix="Test.php">test</directory>
+      <directory suffix="Test.php">tests</directory>
     </testsuite>
   </testsuites>
   <logging/>

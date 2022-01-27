@@ -19,8 +19,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Sanity\\" : "lib/",
-            "SanityTest\\": "test/"
+            "Sanity\\" : "src/",
+            "SanityTest\\": "tests/"
         }
     },
     "scripts": {
