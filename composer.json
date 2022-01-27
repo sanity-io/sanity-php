@@ -1,5 +1,5 @@
 {
-    "name": "sanity/sanity-php",
+    "name": "sanity/sanity",
     "description": "PHP library for the Sanity API",
     "type": "library",
     "license": "MIT",

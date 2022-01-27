@@ -1,27 +1,26 @@
-# sanity-php
+# Sanity PHP library
 
-[![Packagist](https://img.shields.io/packagist/v/sanity/sanity-php.svg?style=flat-square)](https://packagist.org/packages/sanity/sanity-php)[![Build Status](https://img.shields.io/github/workflow/status/sanity-io/sanity-php/CI%20workflow/main?style=flat-square)](https://github.com/sanity-io/sanity-php/actions?query=workflow%3A%22CI+workflow%22)
+[![Packagist](https://img.shields.io/packagist/v/sanity/sanity.svg?style=flat-square)](https://packagist.org/packages/sanity/sanity)[![Build Status](https://img.shields.io/github/workflow/status/sanity-io/sanity-php/CI%20workflow/main?style=flat-square)](https://github.com/sanity-io/sanity-php/actions?query=workflow%3A%22CI+workflow%22)
 
 PHP library for the [Sanity API](https://sanity.io/)
 
 ## Requirements
 
-sanity-php requires PHP >= 7.4, with the `json` module installed.
+`sanity/sanity` requires PHP >= 7.4, with the `json` module installed.
 
 ## Composer
 
 You can install the library via [Composer](http://getcomposer.org/). Run the following command:
 
 ```bash
-composer require sanity/sanity-php
+composer require sanity/sanity
 ```
 
 To use the library, use Composer's [autoload](https://getcomposer.org/doc/00-intro.md#autoloading):
 
 ```php
-require_once 'vendor/autoload.php';
+require 'vendor/autoload.php';
 ```
-
 ## Usage
 
 ### Instantiating a new client
@@ -359,7 +358,7 @@ $html = BlockContent::toHtml($article, [
 
 ## Contributing
 
-`sanity-php` follows the [PSR-2 Coding Style Guide](http://www.php-fig.org/psr/psr-2/). Contributions are welcome, but must conform to this standard.
+`sanity/sanity` follows the [PSR-2 Coding Style Guide](http://www.php-fig.org/psr/psr-2/). Contributions are welcome, but must conform to this standard.
 
 ### Local development
 
