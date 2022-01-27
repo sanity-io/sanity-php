@@ -8,6 +8,8 @@ jobs:
       matrix:
         php-version:
           - '7.4'
+          - '8.0'
+          - '8.1'
     name: CI workflow on PHP ${{ matrix.php-version }}
     steps:
       - uses: actions/checkout@v2
