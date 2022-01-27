@@ -3,7 +3,7 @@ namespace SanityTest;
 
 use Sanity\BlockContent;
 use Sanity\BlockContent\HtmlBuilder;
-use Sanity\BlockContent\Serializers\DefaultSpan;
+use Sanity\Exception\ConfigException;
 use SanityTest\Serializers\MyCustomImageSerializer;
 
 class BlockContentHtmlTest extends TestCase
@@ -11,11 +11,10 @@ class BlockContentHtmlTest extends TestCase
     private $htmlBuilder;
     private $customHtmlBuilder;
 
-    public function __construct()
+    protected function setUp(): void
     {
         BlockContent::$useStaticKeys = true;
 
-        $defaultSpan = new DefaultSpan();
         $serializers = [
             'author' => function ($author) {
                 return '<div>' . $author['attributes']['name'] . '</div>';
@@ -230,12 +229,10 @@ class BlockContentHtmlTest extends TestCase
         $this->assertEquals($expected, $this->customHtmlBuilder->build($input));
     }
 
-    /**
-     * @expectedException Sanity\Exception\ConfigException
-     * @expectedExceptionMessage No serializer registered for node type "author"
-     */
     public function testThrowsErrorOnCustomBlockTypeWithoutRegisteredHandler()
     {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('No serializer registered for node type "author"');
         $input = BlockContent::toTree($this->loadFixture('custom-block.json'));
         $this->htmlBuilder->build($input);
     }

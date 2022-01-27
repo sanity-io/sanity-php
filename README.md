@@ -6,7 +6,7 @@ PHP library for the [Sanity API](https://sanity.io/)
 
 ## Requirements
 
-sanity-php requires PHP >= 5.6, with the `json` module installed.
+sanity-php requires PHP >= 7.4, with the `json` module installed.
 
 ## Composer
 
@@ -360,6 +360,10 @@ $html = BlockContent::toHtml($article, [
 ## Contributing
 
 `sanity-php` follows the [PSR-2 Coding Style Guide](http://www.php-fig.org/psr/psr-2/). Contributions are welcome, but must conform to this standard.
+
+### Local development
+
+When running the full CI-suite locally (`composer run test`) you need to install [PHP-CS-Fixer](https://github.com/FriendsOfPHP/PHP-CS-Fixer) to be able to check the coding standard.
 
 ## License
 

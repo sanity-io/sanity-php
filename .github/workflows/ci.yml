@@ -7,11 +7,6 @@ jobs:
       fail-fast: false
       matrix:
         php-version:
-          - '5.6'
-          - '7.0'
-          - '7.1'
-          - '7.2'
-          - '7.3'
           - '7.4'
     name: CI workflow on PHP ${{ matrix.php-version }}
     steps:
@@ -21,6 +16,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
+          tools: php-cs-fixer
 
       - name: Validate composer files
         run: composer validate --strict
@@ -41,7 +37,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          composer install --prefer-dist
+          composer install
 
       - name: Run tests
-        run: composer run test
+        run: vendor/bin/phpunit
+
+      - name: Check coding standard
+        run: php-cs-fixer fix --dry-run --diff
