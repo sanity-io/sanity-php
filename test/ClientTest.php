@@ -29,7 +29,7 @@ class ClientTest extends TestCase
         set_error_handler(array($this, 'errorHandler'));
     }
 
-    public function errorHandler($errno, $errstr, $errfile, $errline, $errcontext)
+    public function errorHandler($errno, $errstr, $errfile = null, $errline = null, $errcontext = null)
     {
         $this->errors[] = compact('errno', 'errstr', 'errfile', 'errline', 'errcontext');
     }
