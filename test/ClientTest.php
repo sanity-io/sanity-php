@@ -97,7 +97,6 @@ class ClientTest extends TestCase
             'dataset' => 'production',
             'apiVersion' => 'X',
         ]);
-
     }
 
     public function testDoesNotThrowOnApiVersionOne()
@@ -933,7 +932,7 @@ class ClientTest extends TestCase
         $errorMessage = 'Error with level ' . $errno . ' and message "' . $errstr . '" not triggered. ';
         if ($numErrors === 0) {
             $errorMessage .= 'No errors triggered.';
-        } else if ($numErrors === 1) {
+        } elseif ($numErrors === 1) {
             $err = $this->errors[0];
             $errorMessage .= 'Error triggered: "' . $err['errstr'] . '" (level ' . $err['errno'] . ')';
         } else {

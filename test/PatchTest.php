@@ -187,7 +187,7 @@ class PatchTest extends TestCase
 
     public function testCanCreateSplicePatches()
     {
-        $patch = function () { return new Patch('abc123'); };
+        $patch = fn () => new Patch('abc123');
         $replaceFirst = $patch()->splice('tags', 0, 1, ['foo'])->serialize();
         $insertInMiddle = $patch()->splice('tags', 5, 0, ['foo'])->serialize();
         $deleteLast = $patch()->splice('tags', -1, 1)->serialize();
