@@ -48,12 +48,8 @@ class BlockContent
 
         $options = array_merge($defaults, $options);
         $keyGenerator = self::$useStaticKeys
-            ? function ($item) {
-                return substr(md5(serialize($item)), 0, 7);
-            }
-            : function () {
-                return uniqid();
-            };
+            ? fn ($item) => substr(md5(serialize($item)), 0, 7)
+            : fn () => uniqid();
 
         if ($options['version'] != 2) {
             throw new InvalidArgumentException('Unsupported version');

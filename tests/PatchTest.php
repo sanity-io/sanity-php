@@ -1,6 +1,8 @@
 <?php
 namespace SanityTest;
 
+use Sanity\Exception\ConfigException;
+use Sanity\Exception\InvalidArgumentException;
 use Sanity\Selection;
 use Sanity\Patch;
 
@@ -64,13 +66,11 @@ class PatchTest extends TestCase
         $this->assertEquals(['id' => 'abc123', 'unset' => ['foo', 'bar']], $patch->serialize());
     }
 
-    /**
-     * @expectedException Sanity\Exception\InvalidArgumentException
-     * @expectedExceptionMessage array of attributes
-     */
     public function testThrowsWhenCallingRemoveWithoutArray()
     {
         $patch = new Patch('abc123');
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('array of attributes');
         $patch->remove('foobar');
     }
 
@@ -103,14 +103,12 @@ class PatchTest extends TestCase
         $this->assertEquals(['id' => 'abc123', 'dec' => ['count' => 1]], $patch->serialize());
     }
 
-    /**
-     * @expectedException Sanity\Exception\ConfigException
-     * @expectedExceptionMessage mutate() method
-     */
     public function testThrowsWhenCallingCommitWithoutClientContext()
     {
         $patch = new Patch('abc123');
         $patch->remove(['foo']);
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('mutate() method');
         $patch->commit();
     }
 
@@ -163,39 +161,33 @@ class PatchTest extends TestCase
         ], $patch->serialize());
     }
 
-    /**
-     * @expectedException Sanity\Exception\InvalidArgumentException
-     * @expectedExceptionMessage "at"-argument which is one of
-     */
     public function testThrowsWhenCallingInsertWithInvalidAtArgument()
     {
         $patch = new Patch('abc123');
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('"at"-argument which is one of');
         $patch->insert('foo', 'tags[-1]', ['foo', 'bar']);
     }
 
-    /**
-     * @expectedException Sanity\Exception\InvalidArgumentException
-     * @expectedExceptionMessage "selector"-argument which must be a string
-     */
     public function testThrowsWhenCallingInsertWithInvalidSelectorArgument()
     {
         $patch = new Patch('abc123');
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('"selector"-argument which must be a string');
         $patch->insert('before', ['tags' => -1], ['foo', 'bar']);
     }
 
-    /**
-     * @expectedException Sanity\Exception\InvalidArgumentException
-     * @expectedExceptionMessage "items"-argument which must be an array
-     */
     public function testThrowsWhenCallingInsertWithInvalidItemsArgument()
     {
         $patch = new Patch('abc123');
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('"items"-argument which must be an array');
         $patch->insert('before', 'tags[-1]', 'boing');
     }
 
     public function testCanCreateSplicePatches()
     {
-        $patch = function () { return new Patch('abc123'); };
+        $patch = fn () => new Patch('abc123');
         $replaceFirst = $patch()->splice('tags', 0, 1, ['foo'])->serialize();
         $insertInMiddle = $patch()->splice('tags', 5, 0, ['foo'])->serialize();
         $deleteLast = $patch()->splice('tags', -1, 1)->serialize();

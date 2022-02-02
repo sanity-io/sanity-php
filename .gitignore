@@ -1,11 +1,7 @@
 build
-tests/phpunit.xml
-composer.phar
 vendor
-test.php
-.lintcache
-docs/_build
-package.json
 *.sublime-workspace
-clover.xml
-/coverage
+.vscode
+phpunit.xml
+.phpunit.result.cache
+.php-cs-fixer.cache

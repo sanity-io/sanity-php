@@ -3,7 +3,7 @@ namespace SanityTest;
 
 use Sanity\BlockContent;
 use Sanity\BlockContent\HtmlBuilder;
-use Sanity\BlockContent\Serializers\DefaultSpan;
+use Sanity\Exception\ConfigException;
 use SanityTest\Serializers\MyCustomImageSerializer;
 
 class BlockContentHtmlTest extends TestCase
@@ -11,11 +11,10 @@ class BlockContentHtmlTest extends TestCase
     private $htmlBuilder;
     private $customHtmlBuilder;
 
-    public function __construct()
+    protected function setUp(): void
     {
         BlockContent::$useStaticKeys = true;
 
-        $defaultSpan = new DefaultSpan();
         $serializers = [
             'author' => function ($author) {
                 return '<div>' . $author['attributes']['name'] . '</div>';
@@ -25,12 +24,12 @@ class BlockContentHtmlTest extends TestCase
                     ? '<div class="big-heading">' . implode('', $block['children']) . '</div>'
                     : '<p class="foo">' . implode('', $block['children']) . '</p>';
             },
-            'list' => function($list) {
+            'list' => function ($list) {
                 $style = isset($list['itemStyle']) ? $list['itemStyle'] : 'default';
                 $tagName = $style === 'number' ? 'ol' : 'ul';
                 return '<' . $tagName . ' class="foo">' . implode('', $list['children']) . '</' . $tagName . '>';
             },
-            'listItem' => function($item) {
+            'listItem' => function ($item) {
                 return '<li class="foo">' . implode('', $item['children']) . '</li>';
             },
 
@@ -230,12 +229,10 @@ class BlockContentHtmlTest extends TestCase
         $this->assertEquals($expected, $this->customHtmlBuilder->build($input));
     }
 
-    /**
-     * @expectedException Sanity\Exception\ConfigException
-     * @expectedExceptionMessage No serializer registered for node type "author"
-     */
     public function testThrowsErrorOnCustomBlockTypeWithoutRegisteredHandler()
     {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('No serializer registered for node type "author"');
         $input = BlockContent::toTree($this->loadFixture('custom-block.json'));
         $this->htmlBuilder->build($input);
     }
@@ -295,7 +292,8 @@ class BlockContentHtmlTest extends TestCase
         $this->assertEquals($expected, $htmlBuilder($input));
     }
 
-    public function testCanSerializeDocument() {
+    public function testCanSerializeDocument()
+    {
         $input = $this->loadFixture('document.json')['body'];
         $expected = '<p>Integer leo sapien, aliquet nec sodales et, fermentum id arcu. Sed vitae fermentum erat. Cras vitae fermentum neque. Nunc condimentum justo ut est rutrum, nec varius lectus aliquam. Nunc vulputate nunc scelerisque, pulvinar odio quis, pulvinar tortor. Mauris iaculis enim non nibh condimentum bibendum. Proin imperdiet ligula sed neque laoreet gravida. Proin non lorem a leo venenatis efficitur sit amet et arcu. Suspendisse potenti. Praesent tempus vitae elit vel blandit. Vestibulum sollicitudin metus vel urna sollicitudin egestas.</p><p>Maecenas massa dui, pretium ac quam sed, euismod viverra risus. Nam vehicula, libero eget tincidunt ullamcorper, nibh mauris auctor ex, quis vulputate felis massa ac libero. Praesent eget auctor justo. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas nec purus vel magna pellentesque aliquet. Vestibulum sit amet enim nec nulla tempus maximus. Proin maximus elementum maximus. Pellentesque quis interdum nisl. </p>';
         $this->assertEquals($expected, BlockContent::toHtml($input));

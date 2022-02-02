@@ -5,7 +5,7 @@ use Sanity\BlockContent;
 
 class BlockContentTreeTest extends TestCase
 {
-    public function __construct()
+    protected function setUp(): void
     {
         BlockContent::$useStaticKeys = true;
     }

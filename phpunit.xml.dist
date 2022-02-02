@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<phpunit
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  bootstrap="vendor/autoload.php"
+  colors="true"
+  xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
+  beStrictAboutTestsThatDoNotTestAnything="false"
+>
+  <coverage>
+    <include>
+      <directory>src</directory>
+    </include>
+    <report>
+      <clover outputFile="build/coverage/clover.xml"/>
+      <html outputDirectory="build/coverage/html"/>
+    </report>
+  </coverage>
+  <testsuites>
+    <testsuite name="Sanity PHP Test Suite">
+      <directory suffix="Test.php">tests</directory>
+    </testsuite>
+  </testsuites>
+  <logging/>
+</phpunit>

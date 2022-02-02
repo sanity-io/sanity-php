@@ -1,6 +1,8 @@
 <?php
 namespace SanityTest;
 
+use Sanity\Exception\ConfigException;
+use Sanity\Exception\InvalidArgumentException;
 use Sanity\Patch;
 use Sanity\Selection;
 use Sanity\Transaction;
@@ -24,14 +26,12 @@ class TransactionTest extends TestCase
         $this->assertEquals(['create' => ['_type' => 'post', 'title' => 'Foo']], $transaction->serialize());
     }
 
-    /**
-     * @expectedException Sanity\Exception\ConfigException
-     * @expectedExceptionMessage `mutate()` method
-     */
     public function testThrowsWhenCallingCommitWithoutClientContext()
     {
         $transaction = new Transaction();
         $transaction->create(['_type' => 'post']);
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('`mutate()` method');
         $transaction->commit();
     }
 
@@ -88,14 +88,12 @@ class TransactionTest extends TestCase
         $this->assertEquals(['patch' => ['id' => 'abc123', 'dec' => ['count' => 1]]], $transaction->serialize()[0]);
     }
 
-    /**
-     * @expectedException Sanity\Exception\InvalidArgumentException
-     * @expectedExceptionMessage instantiated patch or an array
-     */
     public function testThrowsWhenCallingPatchWithInvalidArgs()
     {
         $transaction = new Transaction();
-        $this->assertSame($transaction, $transaction->patch('abc123'));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('instantiated patch or an array');
+        $transaction->patch('abc123');
     }
 
     public function testCanResetPatch()
