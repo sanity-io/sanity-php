@@ -115,21 +115,6 @@ class ClientTest extends TestCase
 
     /**
      * @expectedException Sanity\Exception\ConfigException
-     * @expectedExceptionMessage Cannot combine `useCdn` option with `token` as authenticated requests cannot be cached
-     */
-    public function testThrowsWhenConstructingNewClientWithTokenAndCdnOption()
-    {
-        $this->client = new Client([
-            'projectId' => 'abc',
-            'dataset' => 'production',
-            'useCdn' => true,
-            'token' => 'foo',
-            'apiVersion' => '2019-01-01',
-        ]);
-    }
-
-    /**
-     * @expectedException Sanity\Exception\ConfigException
      * @expectedExceptionMessage Configuration must contain `projectId`
      */
     public function testThrowsWhenConstructingClientWithoutProjectId()
@@ -223,6 +208,23 @@ class ClientTest extends TestCase
         $mockBody = ['error' => 'SomeError', 'message' => 'Server returned some error'];
         $this->mockResponses([$this->mockJsonResponseBody($mockBody, 500)]);
         $this->client->getDocument('someDocId');
+    }
+
+    public function testCanQueryWithTokenAndCdnOption()
+    {
+        $query = '*[seats >= 2]';
+        $expected = [['_id' => 'someDocId', '_type' => 'bike', 'name' => 'Tandem Extraordinaire', 'seats' => 2]];
+        $mockBody = ['result' => $expected];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)], [
+            'useCdn' => true,
+            'token' => 'nice',
+        ]);
+
+        $this->assertEquals($expected, $this->client->fetch($query));
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.apicdn.sanity.io/v2019-01-01/data/query/production?query=%2A%5Bseats%20%3E%3D%202%5D',
+            'headers' => ['Authorization' => 'Bearer nice'],
+        ]);
     }
 
     public function testCanQueryForDocumentsWithoutParams()
@@ -334,6 +336,20 @@ class ClientTest extends TestCase
         $result = ['_id' => 'someNewDocId'] + $document;
         $mockBody = ['results' => [['id' => 'someNewDocId', 'document' => $result]]];
         $this->mockResponses([$this->mockJsonResponseBody($mockBody)], ['useCdn' => true, 'token' => null]);
+
+        $this->assertEquals($result, $this->client->create($document));
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v2019-01-01/data/mutate/production?returnIds=true&returnDocuments=true',
+            'requestBody' => json_encode(['mutations' => [['create' => $document]]])
+        ]);
+    }
+
+    public function testDoesNotUseCdnForMutationsWithToken()
+    {
+        $document = ['_type' => 'bike', 'seats' => 12, 'name' => 'Dusinsykkel'];
+        $result = ['_id' => 'someNewDocId'] + $document;
+        $mockBody = ['results' => [['id' => 'someNewDocId', 'document' => $result]]];
+        $this->mockResponses([$this->mockJsonResponseBody($mockBody)], ['useCdn' => true, 'token' => 'abc123']);
 
         $this->assertEquals($result, $this->client->create($document));
         $this->assertPreviousRequest([

@@ -191,6 +191,7 @@ class Client
             'headers' => ['Content-Type' => 'application/json'],
             'body' => json_encode($body),
             'url' => '/data/mutate/' . $this->clientConfig['dataset'],
+            'cdnAllowed' => false,
         ];
 
         // Try to perform request
@@ -304,6 +305,7 @@ class Client
             'headers' => ['Content-Type' => $mime],
             'query' => $queryParams,
             'body' => $data,
+            'cdnAllowed' => false,
         ];
 
         // Try to perform request
@@ -491,12 +493,6 @@ class Client
 
         if ($projectBased && !$dataset) {
             throw new ConfigException('Configuration must contain `dataset`');
-        }
-
-        if ($useCdn && !empty($newConfig['token'])) {
-            throw new ConfigException(
-                'Cannot combine `useCdn` option with `token` as authenticated requests cannot be cached'
-            );
         }
 
         $hostParts = explode('://', $newConfig['apiHost']);
