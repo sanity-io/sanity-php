@@ -67,6 +67,10 @@ class Client
         $serializedParams = $params ? ParameterSerializer::serialize($params) : [];
         $queryParams = array_merge(['query' => $query], $serializedParams);
 
+        if (isset($this->clientConfig['perspective']) && $this->clientConfig['clientConfig'] !== 'raw') {
+            $queryParams['perspective'] = $this->clientConfig['perspective'];
+        }
+
         $body = $this->request([
             'url' => '/data/query/' . $this->clientConfig['dataset'],
             'query' => $queryParams,
@@ -475,6 +479,7 @@ class Client
         $useCdn = isset($newConfig['useCdn']) ? $newConfig['useCdn'] : false;
         $projectId = isset($newConfig['projectId']) ? $newConfig['projectId'] : null;
         $dataset = isset($newConfig['dataset']) ? $newConfig['dataset'] : null;
+        $perspective = isset($newConfig['perspective']) ? $newConfig['perspective'] : null;
 
         $apiIsDate = preg_match('#^\d{4}-\d{2}-\d{2}$#', $apiVersion);
         if ($apiIsDate) {
@@ -493,6 +498,10 @@ class Client
 
         if ($projectBased && !$dataset) {
             throw new ConfigException('Configuration must contain `dataset`');
+        }
+
+        if ($perspective && !is_string($perspective)) {
+            throw new ConfigException('Configuration `perspective` parameter must be a string');
         }
 
         $hostParts = explode('://', $newConfig['apiHost']);
