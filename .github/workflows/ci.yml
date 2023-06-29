@@ -1,5 +1,7 @@
 name: CI
-on: push
+on:
+  - push
+  - pull_request
 jobs:
   ci:
     runs-on: ubuntu-20.04
@@ -13,6 +15,9 @@ jobs:
           - '7.2'
           - '7.3'
           - '7.4'
+          - '8.0'
+          - '8.1'
+          - '8.2'
     name: CI workflow on PHP ${{ matrix.php-version }}
     steps:
       - uses: actions/checkout@v2
