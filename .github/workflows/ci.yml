@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@72ae4ccbe57f82bbe08411e84e2130bd4ba1c10f # v2
         with:
           php-version: ${{ matrix.php-version }}
 
