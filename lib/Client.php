@@ -67,7 +67,7 @@ class Client
         $serializedParams = $params ? ParameterSerializer::serialize($params) : [];
         $queryParams = array_merge(['query' => $query], $serializedParams);
 
-        if (isset($this->clientConfig['perspective']) && $this->clientConfig['clientConfig'] !== 'raw') {
+        if (isset($this->clientConfig['perspective']) && $this->clientConfig['perspective'] !== 'raw') {
             $queryParams['perspective'] = $this->clientConfig['perspective'];
         }
 
