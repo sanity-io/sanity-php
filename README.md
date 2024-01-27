@@ -85,6 +85,158 @@ foreach ($product in $results) {
 
 See the [query documentation](https://www.sanity.io/docs/front-ends/query-cheat-sheet) for more information on how to write queries.
 
+### Using perspectives
+
+The `perspective` option can be used to specify special filtering behavior for queries. The default value is `raw`, which means no special filtering is applied, while [`published`](#published) and [`previewDrafts`](#previewdrafts) can be used to optimize for specific use cases.
+
+#### `published`
+
+Useful for when you want to be sure that draft documents are not returned in production. Pairs well with private datasets.
+
+With a dataset that looks like this:
+
+```json
+[
+  {
+    "_type": "author",
+    "_id": "ecfef291-60f0-4609-bbfc-263d11a48c43",
+    "name": "George Martin"
+  },
+  {
+    "_type": "author",
+    "_id": "drafts.ecfef291-60f0-4609-bbfc-263d11a48c43",
+    "name": "George R.R. Martin"
+  },
+  {
+    "_type": "author",
+    "_id": "drafts.f4898efe-92c4-4dc0-9c8c-f7480aef17e2",
+    "name": "Stephen King"
+  }
+]
+```
+
+And a query like this:
+
+```php
+$client = new SanityClient([
+  // ...config...
+  'useCdn' => true,
+  'perspective' => 'published',
+]);
+
+$authors = $client->fetch('*[_type == "author"]');
+```
+
+Then `$authors` will only contain documents that don't have a `drafts.` prefix in their `_id`, in this case just "George Martin":
+
+```json
+[
+  {
+    "_type": "author",
+    "_id": "ecfef291-60f0-4609-bbfc-263d11a48c43",
+    "name": "George Martin"
+  }
+]
+```
+
+#### `previewDrafts`
+
+Designed to help answer the question "What is our app going to look like after all the draft documents are published?".
+
+Given a dataset like this:
+
+```json
+[
+  {
+    "_type": "author",
+    "_id": "ecfef291-60f0-4609-bbfc-263d11a48c43",
+    "name": "George Martin"
+  },
+  {
+    "_type": "author",
+    "_id": "drafts.ecfef291-60f0-4609-bbfc-263d11a48c43",
+    "name": "George R.R. Martin"
+  },
+  {
+    "_type": "author",
+    "_id": "drafts.f4898efe-92c4-4dc0-9c8c-f7480aef17e2",
+    "name": "Stephen King"
+  },
+  {
+    "_type": "author",
+    "_id": "6b3792d2-a9e8-4c79-9982-c7e89f2d1e75",
+    "name": "Terry Pratchett"
+  }
+]
+```
+
+And a query like this:
+
+```php
+$client = new SanityClient([
+  // ...config...
+  'useCdn' => false, // the `previewDrafts` perspective requires this to be `false`
+  'perspective' => 'previewDrafts',
+]);
+
+$authors = $client->fetch('*[_type == "author"]');
+```
+
+Then `authors` will look like this. Note that the result dedupes documents with a preference for the draft version:
+
+```json
+[
+  {
+    "_type": "author",
+    "_id": "ecfef291-60f0-4609-bbfc-263d11a48c43",
+    "_originalId": "drafts.ecfef291-60f0-4609-bbfc-263d11a48c43",
+    "name": "George R.R. Martin"
+  },
+  {
+    "_type": "author",
+    "_id": "f4898efe-92c4-4dc0-9c8c-f7480aef17e2",
+    "_originalId": "drafts.f4898efe-92c4-4dc0-9c8c-f7480aef17e2",
+    "name": "Stephen King"
+  },
+  {
+    "_type": "author",
+    "_id": "6b3792d2-a9e8-4c79-9982-c7e89f2d1e75",
+    "_originalId": "6b3792d2-a9e8-4c79-9982-c7e89f2d1e75",
+    "name": "Terry Pratchett"
+  }
+]
+```
+
+Since the query simulates what the result will be after publishing the drafts, the `_id` doesn't contain the `drafts.` prefix. If you want to check if a document is a draft or not you can use the `_originalId` field, which is only available when using the `previewDrafts` perspective.
+
+```php
+$authors = $client->fetch('*[_type == "author"]{..., "status": select(
+  _originalId in path("drafts.**") => "draft",
+  "published"
+)}');
+```
+
+Which changes the result to be:
+
+```json
+[
+  {
+    "_type": "author",
+    "_id": "ecfef291-60f0-4609-bbfc-263d11a48c43",
+    "_originalId": "drafts.ecfef291-60f0-4609-bbfc-263d11a48c43",
+    "name": "George R.R. Martin",
+    "status": "draft"
+  },
+  {
+    "_type": "author",
+    "_id": "f4898efe-92c4-4dc0-9c8c-f7480aef17e2",
+    "_originalId": "f4898efe-92c4-4dc0-9c8c-f7480aef17e2",
+    "name": "Stephen King",
+    "status": "published"
+  }
+]
+```
+
 ### Creating documents
 
 ```php

@@ -134,6 +134,20 @@ class ClientTest extends TestCase
         $this->client = new Client(['projectId' => 'abc', 'apiVersion' => '2019-01-01']);
     }
 
+    /**
+     * @expectedException Sanity\Exception\ConfigException
+     * @expectedExceptionMessage Configuration `perspective` parameter must be a string
+     */
+    public function testThrowsWhenConstructingClientWithNonStringPerspective()
+    {
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+            'apiVersion' => '1',
+            'perspective' => 1337,
+        ]);
+    }
+
     public function testCanSetAndGetConfig()
     {
         $this->client = new Client([
@@ -257,6 +271,46 @@ class ClientTest extends TestCase
         $this->assertPreviousRequest([
             'url' => $expectedUrl,
             'headers' => ['Authorization' => 'Bearer muchsecure'],
+        ]);
+    }
+
+    public function testCanQueryWithPerspective()
+    {
+        $query = '*[seats >= 2]';
+        $expected = [['_id' => 'someDocId', '_type' => 'bike', 'name' => 'Tandem Extraordinaire', 'seats' => 2]];
+        $mockBody = ['result' => $expected];
+        $this->mockResponses(
+            [$this->mockJsonResponseBody($mockBody)],
+            ['perspective' => 'previewDrafts', 'apiVersion' => '2023-06-03']
+        );
+
+        $this->assertEquals($expected, $this->client->fetch($query));
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.api.sanity.io/v2023-06-03/data/query/production?query=%2A%5Bseats%20%3E%3D%202%5D&perspective=previewDrafts',
+            'headers' => ['Authorization' => 'Bearer muchsecure'],
+        ]);
+    }
+
+    /**
+     * @expectedException Sanity\Exception\ClientException
+     * @expectedExceptionMessage previewDrafts perspective is not allowed for CDN requests
+     */
+    public function testThrowsWhenPerspectiveDoesNotSupportCdn()
+    {
+        $query = '*[seats >= 2]';
+        $expected = [['_id' => 'someDocId', '_type' => 'bike', 'name' => 'Tandem Extraordinaire', 'seats' => 2]];
+        $mockBody = ['error' => [
+            'description' => 'previewDrafts perspective is not allowed for CDN requests',
+            'type' => 'httpInvalidQueryParamsError'
+        ]];
+        $this->mockResponses(
+            [$this->mockJsonResponseBody($mockBody, 400)],
+            ['perspective' => 'previewDrafts', 'apiVersion' => '2023-06-03', 'useCdn' => true]
+        );
+
+        $this->assertEquals($expected, $this->client->fetch($query));
+        $this->assertPreviousRequest([
+            'url' => 'https://abc.apicdn.sanity.io/v2023-06-03/data/query/production?query=%2A%5Bseats%20%3E%3D%202%5D&perspective=previewDrafts',
         ]);
     }
 
