@@ -1,4 +1,5 @@
 <?php
+
 namespace Sanity\BlockContent\TypeHandlers;
 
 class DefaultHandler

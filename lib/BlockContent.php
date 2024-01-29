@@ -1,9 +1,10 @@
 <?php
+
 namespace Sanity;
 
-use Sanity\Exception\InvalidArgumentException;
-use Sanity\BlockContent\TreeBuilder;
 use Sanity\BlockContent\HtmlBuilder;
+use Sanity\BlockContent\TreeBuilder;
+use Sanity\Exception\InvalidArgumentException;
 
 class BlockContent
 {
@@ -51,9 +52,9 @@ class BlockContent
             ? function ($item) {
                 return substr(md5(serialize($item)), 0, 7);
             }
-            : function () {
-                return uniqid();
-            };
+        : function () {
+            return uniqid();
+        };
 
         if ($options['version'] != 2) {
             throw new InvalidArgumentException('Unsupported version');

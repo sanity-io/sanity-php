@@ -1,4 +1,5 @@
 <?php
+
 namespace Sanity\Exception;
 
 class RequestException extends BaseException
@@ -23,7 +24,7 @@ class RequestException extends BaseException
         if (isset($body['error']) && isset($body['message'])) {
             // API/Boom style errors ({statusCode, error, message})
             $this->message = $body['error'] . ' - ' . $body['message'];
-        } elseif (isset($body['error']) && isset($body['error']['description'])) {
+        } elseif (isset($body['error']['description'])) {
             // Query/database errors ({error: {description, other, arb, props}})
             $this->message = $body['error']['description'];
             $this->details = $body['error'];

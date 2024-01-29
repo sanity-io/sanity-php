@@ -1,4 +1,5 @@
 <?php
+
 namespace Sanity\BlockContent;
 
 use Sanity\BlockContent;
@@ -93,7 +94,7 @@ class TreeBuilder
 
     private function findMark($mark, $parent)
     {
-        $markDefs = isset($parent['markDefs']) ? $parent['markDefs'] : [];
+        $markDefs = $parent['markDefs'] ?? [];
         foreach ($markDefs as $markDef) {
             if (isset($markDef['_key']) && $markDef['_key'] === $mark) {
                 return $markDef;
@@ -116,7 +117,7 @@ class TreeBuilder
             // Each item in a list comes in its own block.
             // We bundle these together in a single list object
             $listBlocks[] = $block;
-            $nextBlock = isset($blocks[$index + 1]) ? $blocks[$index + 1] : null;
+            $nextBlock = $blocks[$index + 1] ?? null;
 
             // If next block is not a similar list object, this list is complete
             if (!isset($nextBlock['listItem']) || ($nextBlock['listItem'] !== $block['listItem'])) {
@@ -131,16 +132,14 @@ class TreeBuilder
     public function parseBlock($block)
     {
         $type = $block['_type'];
-        $typeHandler = isset($this->typeHandlers[$type])
-            ? $this->typeHandlers[$type]
-            : $this->typeHandlers['default'];
+        $typeHandler = $this->typeHandlers[$type] ?? $this->typeHandlers['default'];
 
         return $typeHandler($block, $this);
     }
 
     public function isList($item)
     {
-        $type = isset($item['_type']) ? $item['_type'] : null;
+        $type = $item['_type'] ?? null;
         $listItem = isset($item['listItem']);
         return $type === 'block' && $listItem;
     }

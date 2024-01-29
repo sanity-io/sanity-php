@@ -1,4 +1,5 @@
 <?php
+
 namespace Sanity;
 
 class ParameterSerializer

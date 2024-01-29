@@ -1,4 +1,5 @@
 <?php
+
 namespace Sanity\BlockContent\Serializers;
 
 class DefaultBlock

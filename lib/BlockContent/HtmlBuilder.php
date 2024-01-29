@@ -1,4 +1,5 @@
 <?php
+
 namespace Sanity\BlockContent;
 
 use Sanity\Exception\ConfigException;
@@ -13,12 +14,12 @@ class HtmlBuilder
 
     public function __construct($options = [])
     {
-        $serializers = isset($options['serializers']) ? $options['serializers'] : [];
+        $serializers = $options['serializers'] ?? [];
         $this->serializers = array_replace_recursive($this->getDefaultSerializers(), $serializers);
-        $this->charset = isset($options['charset']) ? $options['charset'] : 'utf-8';
-        $this->imageOptions = isset($options['imageOptions']) ? $options['imageOptions'] : [];
-        $this->projectId = isset($options['projectId']) ? $options['projectId'] : null;
-        $this->dataset = isset($options['dataset']) ? $options['dataset'] : null;
+        $this->charset = $options['charset'] ?? 'utf-8';
+        $this->imageOptions = $options['imageOptions'] ?? [];
+        $this->projectId = $options['projectId'] ?? null;
+        $this->dataset = $options['dataset'] ?? null;
     }
 
     public function build($content, $parent = null)
@@ -70,11 +71,9 @@ class HtmlBuilder
 
     public function getMarkSerializer($mark)
     {
-        $markName = isset($mark['_type']) ? $mark['_type'] : $mark;
+        $markName = $mark['_type'] ?? $mark;
 
-        return isset($this->serializers['marks'][$markName])
-            ? $this->serializers['marks'][$markName]
-            : null;
+        return $this->serializers['marks'][$markName] ?? null;
     }
 
     public function getImageOptions()

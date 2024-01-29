@@ -1,24 +1,25 @@
 <?php
+
 namespace Sanity;
 
-use Exception;
 use DateInterval;
 use DateTimeImmutable;
+use Exception;
 use GuzzleHttp\Client as HttpClient;
-use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
+use GuzzleHttp\Psr7\Request;
 use Sanity\BlockContent;
 use Sanity\Exception\ClientException;
 use Sanity\Exception\ConfigException;
-use Sanity\Exception\ServerException;
 use Sanity\Exception\InvalidArgumentException;
+use Sanity\Exception\ServerException;
 use Sanity\Util\DocumentPropertyAsserter;
 
 class Client
 {
     use DocumentPropertyAsserter;
 
-    const NO_API_VERSION_WARNING =
+    public const NO_API_VERSION_WARNING =
         'Using the Sanity client without specifying an API version is deprecated.' .
         'See https://github.com/sanity-io/sanity-php#specifying-api-version';
 
@@ -44,9 +45,9 @@ class Client
      * @param array $config Array of configuration options
      * @return Client
      */
-    public function __construct($config = [])
+    public function __construct(array $config = [])
     {
-        $this->config($config);
+        return $this->config($config);
     }
 
     /**
@@ -77,7 +78,7 @@ class Client
             'cdnAllowed' => true
         ]);
 
-        return $unfilteredResponse ? $body :  $body['result'];
+        return $unfilteredResponse ? $body : $body['result'];
     }
 
     /**
@@ -167,7 +168,7 @@ class Client
     public function delete($selection, $options = null)
     {
         $sel = $selection instanceof Selection ? $selection : new Selection($selection);
-        $opts = array_replace(['returnDocuments' =>  false], $options ?: []);
+        $opts = array_replace(['returnDocuments' => false], $options ?: []);
         return $this->mutate(['delete' => $sel->serialize()], $opts);
     }
 
@@ -204,7 +205,7 @@ class Client
         // Should we return the documents?
         $returnDocuments = isset($options['returnDocuments']) && $options['returnDocuments'];
         $returnFirst = isset($options['returnFirst']) && $options['returnFirst'];
-        $results = isset($body['results']) ? $body['results'] : [];
+        $results = $body['results'] ?? [];
 
         if ($returnDocuments && $returnFirst) {
             return isset($results[0]) ? $results[0]['document'] : null;
@@ -270,7 +271,7 @@ class Client
         }
 
         // Use passed mime type if specified, otherwise default to octet-stream
-        $mime = isset($assetOptions['contentType']) ? $assetOptions['contentType'] : 'application/octet-stream';
+        $mime = $assetOptions['contentType'] ?? 'application/octet-stream';
 
         // Copy string metadata keys directly to query string if defined
         $strMetaKeys = ['label', 'title', 'description', 'creditLine', 'filename'];
@@ -405,9 +406,7 @@ class Client
         $contentType = $response->getHeader('Content-Type')[0];
         $isJson = stripos($contentType, 'application/json') !== false;
         $rawBody = (string) $response->getBody();
-        $body = $isJson ? json_decode($rawBody, true) : $rawBody;
-
-        return $body;
+        return $isJson ? json_decode($rawBody, true) : $rawBody;
     }
 
     /**
@@ -433,15 +432,15 @@ class Client
      */
     private function getRequest($options)
     {
-        $headers = isset($options['headers']) ? $options['headers'] : [];
+        $headers = $options['headers'] ?? [];
         $headers['User-Agent'] = 'sanity-php ' . Version::VERSION;
 
         if (!empty($this->clientConfig['token'])) {
             $headers['Authorization'] = 'Bearer ' . $this->clientConfig['token'];
         }
 
-        $method = isset($options['method']) ? $options['method'] : 'GET';
-        $body = isset($options['body']) ? $options['body'] : null;
+        $method = $options['method'] ?? 'GET';
+        $body = $options['body'] ?? null;
         $cdnAllowed = (
             isset($options['cdnAllowed']) &&
             $options['cdnAllowed'] &&
@@ -476,10 +475,10 @@ class Client
         $newConfig = array_replace_recursive($this->defaultConfig, $specifiedConfig);
         $apiVersion = str_replace('#^v#', '', $newConfig['apiVersion']);
         $projectBased = $newConfig['useProjectHostname'];
-        $useCdn = isset($newConfig['useCdn']) ? $newConfig['useCdn'] : false;
-        $projectId = isset($newConfig['projectId']) ? $newConfig['projectId'] : null;
-        $dataset = isset($newConfig['dataset']) ? $newConfig['dataset'] : null;
-        $perspective = isset($newConfig['perspective']) ? $newConfig['perspective'] : null;
+        $useCdn = $newConfig['useCdn'] ?? false;
+        $projectId = $newConfig['projectId'] ?? null;
+        $dataset = $newConfig['dataset'] ?? null;
+        $perspective = $newConfig['perspective'] ?? null;
 
         $apiIsDate = preg_match('#^\d{4}-\d{2}-\d{2}$#', $apiVersion);
         if ($apiIsDate) {

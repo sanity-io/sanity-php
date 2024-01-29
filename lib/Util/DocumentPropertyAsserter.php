@@ -1,4 +1,5 @@
 <?php
+
 namespace Sanity\Util;
 
 use Sanity\Exception\InvalidArgumentException;

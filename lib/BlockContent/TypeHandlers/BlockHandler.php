@@ -1,4 +1,5 @@
 <?php
+
 namespace Sanity\BlockContent\TypeHandlers;
 
 class BlockHandler
@@ -7,7 +8,7 @@ class BlockHandler
     {
         return [
             'type' => 'block',
-            'style' => isset($block['style']) ? $block['style'] : 'normal',
+            'style' => $block['style'] ?? 'normal',
             'content' => isset($block['children']) ? $treeBuilder->parseSpans($block['children'], $block) : [],
         ];
     }

@@ -1,4 +1,5 @@
 <?php
+
 namespace Sanity;
 
 use JsonSerializable;

@@ -1,9 +1,10 @@
 <?php
+
 namespace Sanity;
 
 use JsonSerializable;
-use Sanity\Util\DocumentPropertyAsserter;
 use Sanity\Exception\InvalidArgumentException;
+use Sanity\Util\DocumentPropertyAsserter;
 
 class Patch implements JsonSerializable
 {
@@ -25,7 +26,7 @@ class Patch implements JsonSerializable
 
     public function merge($props)
     {
-        $previous = isset($this->operations['merge']) ? $this->operations['merge'] : [];
+        $previous = $this->operations['merge'] ?? [];
         $this->operations['merge'] = array_replace_recursive($previous, $props);
         return $this;
     }
@@ -53,7 +54,7 @@ class Patch implements JsonSerializable
             );
         }
 
-        $previous = isset($this->operations['unset']) ? $this->operations['unset'] : [];
+        $previous = $this->operations['unset'] ?? [];
         $merged = array_unique(array_merge($previous, $attrs));
         $this->operations['unset'] = $merged;
         return $this;
@@ -67,7 +68,7 @@ class Patch implements JsonSerializable
 
     private function assign($operation, $props, $merge = true)
     {
-        $previous = isset($this->operations[$operation]) ? $this->operations[$operation] : [];
+        $previous = $this->operations[$operation] ?? [];
         $this->operations[$operation] = $merge ? array_replace($previous, $props) : $props;
         return $this;
     }
@@ -158,7 +159,7 @@ class Patch implements JsonSerializable
         $insertLocations = ['before', 'after', 'replace'];
         $signature = 'insert(at, selector, items)';
 
-        $index = array_search($at, $insertLocations);
+        $index = in_array($at, $insertLocations);
         if ($index === false) {
             $valid = implode(', ', array_map(function ($loc) {
                 return '"' . $loc . '"';

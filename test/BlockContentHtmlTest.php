@@ -26,7 +26,7 @@ class BlockContentHtmlTest extends TestCase
                     : '<p class="foo">' . implode('', $block['children']) . '</p>';
             },
             'list' => function($list) {
-                $style = isset($list['itemStyle']) ? $list['itemStyle'] : 'default';
+                $style = $list['itemStyle'] ?? 'default';
                 $tagName = $style === 'number' ? 'ol' : 'ul';
                 return '<' . $tagName . ' class="foo">' . implode('', $list['children']) . '</' . $tagName . '>';
             },
