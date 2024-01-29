@@ -188,7 +188,7 @@ class Client
             $mut = $mut->serialize();
         }
 
-        $body = ['mutations' => !isset($mut[0]) ? [$mut] : $mut];
+        $body = ['mutations' => isset($mut[0]) ? $mut : [$mut]];
         $queryParams = $this->getMutationQueryParams($options);
         $requestOptions = [
             'method' => 'POST',

@@ -11,7 +11,7 @@ class Patch implements JsonSerializable
     use DocumentPropertyAsserter;
 
     private $client;
-    private $selection;
+    private \Sanity\Selection $selection;
     private $operations;
 
     public function __construct($selection, $operations = [], $client = null)

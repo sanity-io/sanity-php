@@ -19,7 +19,7 @@ trait DocumentPropertyAsserter
         $keys = array_keys($doc);
         $diff = array_diff($required, $keys);
 
-        if (empty($diff)) {
+        if ($diff === []) {
             return;
         }
 

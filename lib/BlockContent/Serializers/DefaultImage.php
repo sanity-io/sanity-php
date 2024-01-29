@@ -28,7 +28,7 @@ class DefaultImage
         }
 
         $qs = http_build_query($imageOptions);
-        if (!empty($qs)) {
+        if ($qs !== '' && $qs !== '0') {
             $qs = '?' . $qs;
         }
 

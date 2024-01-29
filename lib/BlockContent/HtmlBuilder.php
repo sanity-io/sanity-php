@@ -6,7 +6,7 @@ use Sanity\Exception\ConfigException;
 
 class HtmlBuilder
 {
-    private $serializers;
+    private array $serializers;
     private $charset;
     private $projectId;
     private $dataset;

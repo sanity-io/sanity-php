@@ -4,9 +4,13 @@ namespace Sanity\Exception;
 
 class RequestException extends BaseException
 {
+    /**
+     * @var mixed
+     */
+    public $details;
     protected $response;
     protected $statusCode;
-    protected $responseBody;
+    protected string $responseBody;
 
     public function __construct($response)
     {

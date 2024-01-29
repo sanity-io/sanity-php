@@ -77,7 +77,7 @@ class TreeBuilder
                 $nodeIndex++;
             }
 
-            if (empty($attributes)) {
+            if ($attributes === []) {
                 $nodeStack[$nodeIndex]->addContent($span['text']);
             } else {
                 $nodeStack[$nodeIndex]->addContent([
