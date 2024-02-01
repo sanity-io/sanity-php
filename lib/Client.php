@@ -537,6 +537,10 @@ class Client
             $query['visibility'] = $options['visibility'];
         }
 
+        if (isset($options['autoGenerateArrayKeys']) && $options['autoGenerateArrayKeys']) {
+            $query['autoGenerateArrayKeys'] = 'true';
+        }
+
         return $query;
     }
 
