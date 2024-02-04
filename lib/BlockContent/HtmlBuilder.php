@@ -114,6 +114,10 @@ class HtmlBuilder
                     'head' => '<span style="text-decoration: underline;">',
                     'tail' => '</span>',
                 ],
+                'strike-through' => [
+                    'head' => '<span style="text-decoration: line-through;">',
+                    'tail' => '</span>',
+                ],
                 'link' => [
                     'head' => function ($mark) {
                         return '<a href="' . $mark['href'] . '">';
