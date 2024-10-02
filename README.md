@@ -1,6 +1,6 @@
 # sanity-php
 
-[![Packagist](https://img.shields.io/packagist/v/sanity/sanity-php.svg?style=flat-square)](https://packagist.org/packages/sanity/sanity-php)[![Build Status](https://img.shields.io/github/actions/workflow/status/sanity-io/sanity-php/ci.yml?style=flat-square&branch=main)](https://github.com/sanity-io/sanity-php/actions?query=workflow%3A%22CI+workflow%22)
+[![Packagist](https://img.shields.io/packagist/v/sanity/sanity-php.svg?style=flat-square)](https://packagist.org/packages/sanity/sanity-php)
 
 PHP library for the [Sanity API](https://sanity.io/)
 
