@@ -23,6 +23,7 @@ class Selection implements JsonSerializable
      *
      * @return array
      */
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return $this->serialize();

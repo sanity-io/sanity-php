@@ -105,6 +105,7 @@ class Transaction implements JsonSerializable
         return $this->operations;
     }
 
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return $this->serialize();
