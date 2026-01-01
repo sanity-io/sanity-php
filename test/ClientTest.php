@@ -114,6 +114,44 @@ class ClientTest extends TestCase
     }
 
     /**
+     * Leading "v" tests (validation)
+     */
+    public function testDoesNotThrowOnApiVersionOneWithLeadingV()
+    {
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+            'apiVersion' => 'v1',
+        ]);
+
+        $this->assertInstanceOf(Client::class, $this->client);
+    }
+
+    public function testDoesNotThrowOnExperimentalApiVersionWithLeadingV()
+    {
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+            'apiVersion' => 'vX',
+        ]);
+
+        $this->assertInstanceOf(Client::class, $this->client);
+    }
+
+    /**
+     * @expectedException Sanity\Exception\ConfigException
+     * @expectedExceptionMessage Invalid API version
+     */
+    public function testThrowsOnInvalidApiVersionWithLeadingV()
+    {
+        $this->client = new Client([
+            'projectId' => 'abc',
+            'dataset' => 'production',
+            'apiVersion' => 'v3',
+        ]);
+    }
+
+    /**
      * @expectedException Sanity\Exception\ConfigException
      * @expectedExceptionMessage Configuration must contain `projectId`
      */
@@ -883,6 +921,7 @@ class ClientTest extends TestCase
 
     public function testUploadAssetFromFilePreservesFilename()
     {
+        $buffer = file_get_contents(__DIR__ . '/fixtures/favicon.png');
         $document = ['_id' => 'image-2638c439689de9ea323ecb8aed6831541fd85cdc-57x57-png', '_type' => 'sanity.imageAsset', 'extension' => 'png'];
         $mockBody = ['document' => $document];
         $this->mockResponses([$this->mockJsonResponseBody($mockBody)]);
@@ -891,7 +930,7 @@ class ClientTest extends TestCase
         $this->assertEquals($document['_id'], $asset['_id']);
         $this->assertPreviousRequest([
             'url' => 'https://abc.api.sanity.io/v2019-01-01/assets/images/production?filename=favicon.png',
-            'headers' => ['Content-Length' => 1876],
+            'headers' => ['Content-Length' => strlen($buffer)],
             'requestBody' => $buffer
         ]);
     }

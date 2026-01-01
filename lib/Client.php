@@ -474,7 +474,7 @@ class Client
         }
 
         $newConfig = array_replace_recursive($this->defaultConfig, $specifiedConfig);
-        $apiVersion = str_replace('#^v#', '', $newConfig['apiVersion']);
+        $apiVersion = preg_replace('/^v/', '', (string) $newConfig['apiVersion']);
         $projectBased = $newConfig['useProjectHostname'];
         $useCdn = isset($newConfig['useCdn']) ? $newConfig['useCdn'] : false;
         $projectId = isset($newConfig['projectId']) ? $newConfig['projectId'] : null;
