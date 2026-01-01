@@ -24,7 +24,13 @@ class BlockContent
 
     public static function isTree($tree)
     {
-        return !isset($tree['_type']) && !isset($tree[0]['_type']);
+        if (!is_array($tree)) return false;
+
+        if (isset($tree['_type'])) return false;
+
+        if (isset($tree[0]) && is_array($tree[0]) && isset($tree[0]['_type'])) return false;
+
+        return true;
     }
 
     public static function migrate($content, $options = [])
