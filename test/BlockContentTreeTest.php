@@ -497,4 +497,34 @@ class BlockContentTreeTest extends TestCase
         $actual = $treeBuilder($input);
         $this->assertEquals($expected, $actual);
     }
+
+    public function testIsTreeReturnsFalseForNonArray()
+    {
+        $this->assertFalse(BlockContent::isTree(null));
+        $this->assertFalse(BlockContent::isTree('string'));
+        $this->assertFalse(BlockContent::isTree(123));
+        $this->assertFalse(BlockContent::isTree((object)['a' => 1]));
+    }
+
+    public function testIsTreeReturnsFalseForBlockObjectShape()
+    {
+        $this->assertFalse(BlockContent::isTree(['_type' => 'block']));
+    }
+
+    public function testIsTreeReturnsFalseForArrayOfBlocks()
+    {
+        $this->assertFalse(BlockContent::isTree([['_type' => 'block']]));
+    }
+
+    public function testIsTreeReturnsTrueForTreeLikeStructure()
+    {
+        $this->assertTrue(BlockContent::isTree([
+            ['type' => 'block', 'content' => ['hello']]
+        ]));
+    }
+
+    public function testIsTreeHandlesEmptyArray()
+    {
+        $this->assertTrue(BlockContent::isTree([]));
+    }
 }
